@@ -1,0 +1,6 @@
+{
+  "name": "Artisanal Ember",
+  "description": "Artisanal flame-grilled burger house ordering app with customizable burgers, combos, sides, bag checkout, and live order tracking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

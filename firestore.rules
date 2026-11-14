@@ -1,0 +1,209 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidMenuItem(data) {
+      return data.keys().hasAll([
+        'name',
+        'category',
+        'description',
+        'ingredientsSummary',
+        'price',
+        'calories',
+        'prepMinutes',
+        'rating',
+        'reviewCount',
+        'featured',
+        'isHero',
+        'published',
+        'imageKey',
+        'customizationGroupKeys',
+        'sortOrder',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'name',
+        'category',
+        'description',
+        'ingredientsSummary',
+        'price',
+        'calories',
+        'prepMinutes',
+        'rating',
+        'reviewCount',
+        'dietaryNote',
+        'featured',
+        'isHero',
+        'published',
+        'imageKey',
+        'customizationGroupKeys',
+        'sortOrder',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.name is string && data.name.size() >= 2 && data.name.size() <= 100 &&
+      data.category in ['burgers', 'combos', 'sides', 'drinks'] &&
+      data.description is string && data.description.size() >= 5 && data.description.size() <= 500 &&
+      data.ingredientsSummary is string && data.ingredientsSummary.size() >= 3 && data.ingredientsSummary.size() <= 200 &&
+      data.price is number && data.price > 0 && data.price <= 10000 &&
+      data.calories is number && data.calories >= 0 && data.calories <= 10000 &&
+      data.prepMinutes is string && data.prepMinutes.size() >= 3 && data.prepMinutes.size() <= 24 &&
+      data.rating is number && data.rating >= 0 && data.rating <= 5 &&
+      data.reviewCount is number && data.reviewCount >= 0 && data.reviewCount <= 1000000 &&
+      (!('dietaryNote' in data) || (data.dietaryNote is string && data.dietaryNote.size() <= 60)) &&
+      data.featured is bool &&
+      data.isHero is bool &&
+      data.published is bool &&
+      data.imageKey in ['hero_smash', 'truffle_brisket', 'spicy_chicken', 'classic_ember', 'rosemary_fries', 'craft_soda'] &&
+      data.customizationGroupKeys is list &&
+      data.customizationGroupKeys.size() <= 5 &&
+      data.customizationGroupKeys.hasOnly(['bun', 'sear', 'addons', 'dip', 'ice']) &&
+      data.sortOrder is number && data.sortOrder >= 0 && data.sortOrder <= 10000 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll([
+        'orderCode',
+        'fulfillment',
+        'pickupWindow',
+        'subtotal',
+        'deliveryFee',
+        'tip',
+        'total',
+        'stage',
+        'estimatedReady',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'orderCode',
+        'fulfillment',
+        'pickupWindow',
+        'subtotal',
+        'deliveryFee',
+        'tip',
+        'total',
+        'stage',
+        'estimatedReady',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.orderCode is string && data.orderCode.size() >= 4 && data.orderCode.size() <= 20 && data.orderCode.matches('^[A-Z0-9\\-]+$') &&
+      data.fulfillment in ['pickup', 'delivery'] &&
+      data.pickupWindow is string && data.pickupWindow.size() >= 3 && data.pickupWindow.size() <= 80 &&
+      data.subtotal is number && data.subtotal > 0 && data.subtotal <= 50000 &&
+      data.deliveryFee is number && data.deliveryFee >= 0 && data.deliveryFee <= 500 &&
+      data.tip is number && data.tip >= 0 && data.tip <= 10000 &&
+      data.total is number && data.total > 0 && data.total <= 60500 &&
+      data.stage is number && data.stage >= 0 && data.stage <= 3 &&
+      data.estimatedReady is string && data.estimatedReady.size() >= 3 && data.estimatedReady.size() <= 20 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidOrderItem(data) {
+      return data.keys().hasAll([
+        'menuItemId',
+        'name',
+        'quantity',
+        'summary',
+        'lineTotal'
+      ]) &&
+      data.keys().hasOnly([
+        'menuItemId',
+        'name',
+        'quantity',
+        'summary',
+        'lineTotal'
+      ]) &&
+      isValidId(data.menuItemId) &&
+      data.name is string && data.name.size() >= 2 && data.name.size() <= 100 &&
+      data.quantity is number && data.quantity >= 1 && data.quantity <= 20 &&
+      data.summary is string && data.summary.size() <= 400 &&
+      data.lineTotal is number && data.lineTotal > 0 && data.lineTotal <= 50000;
+    }
+
+    // Menu Catalog (no PII)
+    match /menu_items/{itemId} {
+      allow get: if isValidId(itemId);
+      allow list: if existing().published is bool;
+      allow create: if isValidId(itemId) &&
+        isValidMenuItem(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(itemId) &&
+        isValidMenuItem(incoming()) &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'name',
+          'category',
+          'description',
+          'ingredientsSummary',
+          'price',
+          'calories',
+          'prepMinutes',
+          'rating',
+          'reviewCount',
+          'dietaryNote',
+          'featured',
+          'isHero',
+          'published',
+          'imageKey',
+          'customizationGroupKeys',
+          'sortOrder',
+          'updatedAt'
+        ]);
+      allow delete: if isValidId(itemId);
+    }
+
+    // Orders (Zero PII; buyer name/whatsapp/address/neighborhood stay exclusively in localStorage)
+    match /orders/{orderId} {
+      allow get: if isValidId(orderId);
+      allow list: if false;
+      allow create: if isValidId(orderId) &&
+        isValidOrder(incoming()) &&
+        incoming().stage == 0 &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(orderId) &&
+        isValidOrder(incoming()) &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        existing().stage < 3 &&
+        incoming().stage == existing().stage + 1 &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['stage', 'updatedAt']);
+      allow delete: if false;
+
+      match /items/{itemId} {
+        allow get, list: if isValidId(orderId) &&
+          exists(/databases/$(database)/documents/orders/$(orderId));
+        allow create: if isValidId(orderId) &&
+          isValidId(itemId) &&
+          isValidOrderItem(incoming()) &&
+          existsAfter(/databases/$(database)/documents/orders/$(orderId));
+        allow update, delete: if false;
+      }
+    }
+  }
+}
