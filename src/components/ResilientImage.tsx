@@ -17,7 +17,7 @@ export function ResilientImage({ src, alt, className = '' }: ResilientImageProps
         aria-label={alt}
         className={`flex flex-col items-center justify-center bg-gradient-to-br from-[#F6F3F2] to-[#EAE7E7] text-[#8E7069] p-4 ${className}`}
       >
-        <Flame className="w-6 h-6 text-[#D3451B] mb-1.5" strokeWidth={1.75} />
+        <Flame className="w-6 h-6 text-brand mb-1.5" strokeWidth={1.75} />
         <span className="text-xs font-medium text-center text-[#5A413A] line-clamp-2">
           {alt}
         </span>

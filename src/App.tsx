@@ -236,10 +236,14 @@ export default function App() {
     const total = subtotal + details.deliveryFee + tip;
 
     const suffix = 1043 + orders.length;
-    const orderCode = `EB-${suffix}`;
+    const orderCode = `${STORE_INFO.orderCodePrefix}-${suffix}`;
     const now = new Date();
     const readyDate = new Date(
-      now.getTime() + (details.fulfillment === 'pickup' ? 20 : 35) * 60000
+      now.getTime() +
+        (details.fulfillment === 'pickup'
+          ? STORE_INFO.pickupEstimatedMinutes
+          : STORE_INFO.deliveryEstimatedMinutes) *
+          60000
     );
     const hours = String(readyDate.getHours()).padStart(2, '0');
     const minutes = String(readyDate.getMinutes()).padStart(2, '0');
@@ -286,7 +290,7 @@ export default function App() {
   const showStickyOrderBar = bagCount > 0 && activeScreen !== 'checkout';
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FCF9F8] text-[#1C1B1B]">
+    <div className="min-h-screen flex flex-col bg-surface text-[#1C1B1B]">
       <TopNav
         activeScreen={activeScreen}
         onNavigate={handleNavigate}
@@ -353,7 +357,7 @@ export default function App() {
               onClick={() => handleNavigate('hearth')}
               className="hover:text-[#1C1B1B] cursor-pointer"
             >
-              A Lanchonete
+              {STORE_INFO.aboutNavLabel}
             </button>
             <button
               type="button"
@@ -385,7 +389,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => handleNavigate('checkout')}
-              className="min-h-[46px] px-5 sm:px-7 py-2.5 rounded-lg bg-[#D3451B] hover:bg-[#B02D00] active:scale-[0.98] text-[#FFFFFF] text-[14px] sm:text-[15px] font-bold inline-flex items-center gap-2 transition-all cursor-pointer shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D3451B]"
+              className="min-h-[46px] px-5 sm:px-7 py-2.5 rounded-lg bg-brand hover:bg-brand-hover active:scale-[0.98] text-[#FFFFFF] text-[14px] sm:text-[15px] font-bold inline-flex items-center gap-2 transition-all cursor-pointer shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
             >
               <ShoppingBag className="w-4 h-4" strokeWidth={2.2} />
               <span>Ver Sacola e Finalizar</span>

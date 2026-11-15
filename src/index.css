@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+@theme {
+  --color-brand: #D3451B;
+  --color-brand-hover: #B02D00;
+  --color-brand-soft: #FFDBD1;
+  --color-brand-deep: #3B0900;
+  --color-surface: #FCF9F8;
+}
+
 @layer base {
   :root {
     --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -7,14 +15,14 @@
 
   html {
     font-family: var(--font-sans);
-    background-color: #FCF9F8;
+    background-color: var(--color-surface);
     color: #1C1B1B;
     scroll-behavior: smooth;
   }
 
   body {
     font-family: var(--font-sans);
-    background-color: #FCF9F8;
+    background-color: var(--color-surface);
     color: #1C1B1B;
   }
 }

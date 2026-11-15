@@ -1,35 +1,11 @@
 import { useMemo, useState } from 'react';
 import { AlertCircle, ArrowLeft, MessageCircle, Minus, Plus, Trash2 } from 'lucide-react';
-import { STORE_INFO } from '../data/menu';
+import { NEIGHBORHOOD_FEES, STORE_INFO } from '../config/store';
 import { BuyerData, CartItem, FulfillmentType, MenuItem } from '../types';
 import { formatBRL } from '../utils/format';
 import { ResilientImage } from './ResilientImage';
 
-const WHATSAPP_LOJA = '5511991625833';
-
 type PaymentMethod = 'Pix' | 'Cartão' | 'Dinheiro';
-
-export interface NeighborhoodFeeOption {
-  id: string;
-  label: string;
-  fee: number;
-  fulfillment: FulfillmentType;
-}
-
-const NEIGHBORHOOD_FEES: NeighborhoodFeeOption[] = [
-  {
-    id: 'jardim-rosas',
-    label: `Entrega · ${STORE_INFO.neighborhood} (${STORE_INFO.city})`,
-    fee: STORE_INFO.deliveryFee,
-    fulfillment: 'delivery',
-  },
-  {
-    id: 'retirada',
-    label: 'Retirada no Balcão',
-    fee: 0,
-    fulfillment: 'pickup',
-  },
-];
 
 interface CheckoutScreenProps {
   cartItems: CartItem[];
@@ -79,7 +55,9 @@ export function CheckoutScreen({
   onQuickAdd,
   onPlaceOrder,
 }: CheckoutScreenProps) {
-  const [selectedNeighborhoodId, setSelectedNeighborhoodId] = useState<string>('jardim-rosas');
+  const [selectedNeighborhoodId, setSelectedNeighborhoodId] = useState<string>(
+    NEIGHBORHOOD_FEES[0]?.id ?? 'retirada'
+  );
   const [tipPercent, setTipPercent] = useState<number>(0);
   const [nome, setNome] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
@@ -192,7 +170,7 @@ export function CheckoutScreen({
       `*TOTAL: ${formatBRL(total)}*`,
     ].join('\n');
 
-    const whatsappUrl = `https://wa.me/${WHATSAPP_LOJA}?text=${encodeURIComponent(mensagem)}`;
+    const whatsappUrl = `https://wa.me/${STORE_INFO.whatsappNumber}?text=${encodeURIComponent(mensagem)}`;
     window.open(whatsappUrl, '_blank');
 
     onPlaceOrder({
@@ -217,13 +195,13 @@ export function CheckoutScreen({
             Sua sacola está vazia
           </h1>
           <p className="text-[15px] text-[#5A413A] max-w-md mx-auto">
-            Comece escolhendo um dos nossos combos, hot dogs, hambúrgueres, porções de batata ou bebidas da {STORE_INFO.name}.
+            {STORE_INFO.emptyBagDescription}
           </p>
           <div className="pt-2">
             <button
               type="button"
               onClick={onBackToMenu}
-              className="min-h-[48px] px-6 py-3 rounded-lg bg-[#D3451B] hover:bg-[#B02D00] text-white text-[15px] font-semibold transition-colors cursor-pointer"
+              className="min-h-[48px] px-6 py-3 rounded-lg bg-brand hover:bg-brand-hover text-white text-[15px] font-semibold transition-colors cursor-pointer"
             >
               Ver o Cardápio
             </button>
@@ -291,7 +269,7 @@ export function CheckoutScreen({
                 className={`w-full min-h-[44px] px-3.5 py-2.5 bg-[#FFFFFF] border rounded-[10px] text-[14px] text-[#1C1B1B] tabular-nums focus:outline-none ${
                   missingFields.bairro
                     ? 'border-[#BA1A1A] focus:border-[#BA1A1A]'
-                    : 'border-[#EAEAEA] focus:border-[#D3451B]'
+                    : 'border-[#EAEAEA] focus:border-brand'
                 }`}
               >
                 {NEIGHBORHOOD_FEES.map((option) => (
@@ -325,7 +303,7 @@ export function CheckoutScreen({
                   className={`w-full min-h-[44px] px-3.5 py-2.5 bg-[#FFFFFF] border rounded-[10px] text-[14px] text-[#1C1B1B] focus:outline-none ${
                     missingFields.nome
                       ? 'border-[#BA1A1A] bg-[#FFF8F7] focus:border-[#BA1A1A]'
-                      : 'border-[#EAEAEA] focus:border-[#D3451B]'
+                      : 'border-[#EAEAEA] focus:border-brand'
                   }`}
                 />
               </div>
@@ -352,7 +330,7 @@ export function CheckoutScreen({
                   className={`w-full min-h-[44px] px-3.5 py-2.5 bg-[#FFFFFF] border rounded-[10px] text-[14px] text-[#1C1B1B] focus:outline-none ${
                     missingFields.whatsapp
                       ? 'border-[#BA1A1A] bg-[#FFF8F7] focus:border-[#BA1A1A]'
-                      : 'border-[#EAEAEA] focus:border-[#D3451B]'
+                      : 'border-[#EAEAEA] focus:border-brand'
                   }`}
                 />
               </div>
@@ -381,7 +359,7 @@ export function CheckoutScreen({
                   className={`w-full min-h-[44px] px-3.5 py-2.5 bg-[#FFFFFF] border rounded-[10px] text-[14px] text-[#1C1B1B] focus:outline-none ${
                     missingFields.endereco
                       ? 'border-[#BA1A1A] bg-[#FFF8F7] focus:border-[#BA1A1A]'
-                      : 'border-[#EAEAEA] focus:border-[#D3451B]'
+                      : 'border-[#EAEAEA] focus:border-brand'
                   }`}
                 />
               </div>
@@ -397,7 +375,7 @@ export function CheckoutScreen({
               <button
                 type="button"
                 onClick={onBackToMenu}
-                className="text-[13px] font-semibold text-[#D3451B] hover:underline cursor-pointer"
+                className="text-[13px] font-semibold text-brand hover:underline cursor-pointer"
               >
                 + Adicionar Mais Itens
               </button>
@@ -597,7 +575,7 @@ export function CheckoutScreen({
                   value={troco}
                   onChange={(e) => setTroco(e.target.value)}
                   placeholder="Ex: 100,00"
-                  className="w-full min-h-[42px] px-3.5 py-2 bg-[#FFFFFF] border border-[#EAEAEA] focus:border-[#D3451B] focus:outline-none rounded-[10px] text-[14px] text-[#1C1B1B]"
+                  className="w-full min-h-[42px] px-3.5 py-2 bg-[#FFFFFF] border border-[#EAEAEA] focus:border-brand focus:outline-none rounded-[10px] text-[14px] text-[#1C1B1B]"
                 />
               </div>
             )}
@@ -640,14 +618,14 @@ export function CheckoutScreen({
 
           <button
             type="submit"
-            className="w-full min-h-[50px] px-6 py-3.5 rounded-lg bg-[#D3451B] hover:bg-[#B02D00] active:scale-[0.98] text-[#FFFFFF] text-[15px] font-bold inline-flex items-center justify-center gap-2 transition-all cursor-pointer tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D3451B]"
+            className="w-full min-h-[50px] px-6 py-3.5 rounded-lg bg-brand hover:bg-brand-hover active:scale-[0.98] text-[#FFFFFF] text-[15px] font-bold inline-flex items-center justify-center gap-2 transition-all cursor-pointer tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           >
             <MessageCircle className="w-4 h-4 shrink-0" strokeWidth={2.2} />
             <span>Enviar Pedido no WhatsApp · {formatBRL(total)}</span>
           </button>
 
           <p className="text-[12px] text-[#8E7069] text-center">
-            Pagamento via Pix, cartão ou dinheiro na retirada e entrega.
+            {STORE_INFO.paymentMethodsLabel}
           </p>
         </aside>
       </form>

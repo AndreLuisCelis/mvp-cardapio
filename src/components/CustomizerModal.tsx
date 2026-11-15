@@ -132,7 +132,7 @@ export function CustomizerModal({
             type="button"
             onClick={onClose}
             aria-label="Fechar personalização"
-            className="absolute top-3 right-3 min-w-[44px] min-h-[44px] rounded-full bg-[#FFFFFF] border border-[#EAEAEA] text-[#1C1B1B] hover:bg-[#F5F5F5] flex items-center justify-center cursor-pointer transition-colors focus-visible:outline-2 focus-visible:outline-[#D3451B]"
+            className="absolute top-3 right-3 min-w-[44px] min-h-[44px] rounded-full bg-[#FFFFFF] border border-[#EAEAEA] text-[#1C1B1B] hover:bg-[#F5F5F5] flex items-center justify-center cursor-pointer transition-colors focus-visible:outline-2 focus-visible:outline-brand"
           >
             <X className="w-5 h-5" />
           </button>
@@ -219,7 +219,7 @@ export function CustomizerModal({
                       }}
                       className={`w-full min-h-[48px] px-3.5 py-2.5 rounded-lg border flex items-center justify-between gap-3 text-left transition-colors cursor-pointer ${
                         isSelected
-                          ? 'border-[#D3451B] bg-[#FCF9F8]'
+                          ? 'border-brand bg-surface'
                           : 'border-[#EAEAEA] bg-[#FFFFFF] hover:border-[#D9D9D9]'
                       }`}
                     >
@@ -228,7 +228,7 @@ export function CustomizerModal({
                           <span
                             className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
                               isSelected
-                                ? 'border-[#D3451B] bg-[#D3451B]'
+                                ? 'border-brand bg-brand'
                                 : 'border-[#8E7069] bg-[#FFFFFF]'
                             }`}
                           >
@@ -240,7 +240,7 @@ export function CustomizerModal({
                           <span
                             className={`w-5 h-5 rounded-[4px] border flex items-center justify-center shrink-0 transition-colors ${
                               isSelected
-                                ? 'border-[#D3451B] bg-[#D3451B] text-[#FFFFFF]'
+                                ? 'border-brand bg-brand text-[#FFFFFF]'
                                 : 'border-[#8E7069] bg-[#FFFFFF]'
                             }`}
                           >
@@ -279,7 +279,7 @@ export function CustomizerModal({
               onChange={(e) => setKitchenNote(e.target.value)}
               placeholder="Ex: Sem picles, molho à parte, pão bem tostado"
               maxLength={120}
-              className="w-full min-h-[44px] px-3.5 py-2.5 bg-[#FFFFFF] border border-[#EAEAEA] focus:border-[#D3451B] focus:outline-none rounded-[10px] text-[14px] text-[#1C1B1B] placeholder:text-[#8E7069]"
+              className="w-full min-h-[44px] px-3.5 py-2.5 bg-[#FFFFFF] border border-[#EAEAEA] focus:border-brand focus:outline-none rounded-[10px] text-[14px] text-[#1C1B1B] placeholder:text-[#8E7069]"
             />
           </div>
         </div>
@@ -312,7 +312,7 @@ export function CustomizerModal({
           <button
             type="button"
             onClick={handleConfirm}
-            className="flex-1 min-h-[48px] px-5 py-3 rounded-lg bg-[#D3451B] hover:bg-[#B02D00] active:scale-[0.98] text-[#FFFFFF] text-[15px] font-semibold transition-all cursor-pointer tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D3451B]"
+            className="flex-1 min-h-[48px] px-5 py-3 rounded-lg bg-brand hover:bg-brand-hover active:scale-[0.98] text-[#FFFFFF] text-[15px] font-semibold transition-all cursor-pointer tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           >
             {editingCartItem ? 'Atualizar Item' : 'Adicionar ao Pedido'} ·{' '}
             {formatBRL(unitPrice * quantity)}

@@ -35,6 +35,7 @@ import convencao2lImg from '../assets/images/convencao_2l.jpg';
 import cocaCola600Img from '../assets/images/coca_cola_600ml.jpg';
 import guarana2lImg from '../assets/images/guarana_2l.png';
 import cocaCola2lImg from '../assets/images/coca_cola_2l.jpeg';
+import { STORE_INFO } from '../config/store';
 import {
   CustomizationGroup,
   CustomizationGroupKey,
@@ -42,17 +43,9 @@ import {
   MenuCategory,
   MenuItem,
   PlacedOrder,
-  StoreInfo,
 } from '../types';
 
-export const STORE_INFO: StoreInfo = {
-  name: 'TOP Lanches',
-  neighborhood: 'Jardim Rosas',
-  city: 'Francisco Morato - SP',
-  minOrder: 20.0,
-  deliveryFee: 3.99,
-  deliveryTimeMin: '20-30',
-};
+export { STORE_INFO };
 
 export const MENU_CATEGORIES: {
   key: Exclude<MenuCategory, 'all' | 'combos'>;

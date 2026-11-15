@@ -1,4 +1,5 @@
 import { Check, ChefHat, Clock, Flame, PackageCheck, RotateCcw } from 'lucide-react';
+import { KITCHEN_STAGES, STORE_INFO } from '../config/store';
 import { OrderStage, PlacedOrder } from '../types';
 import { formatBRL } from '../utils/format';
 
@@ -8,37 +9,12 @@ interface OrdersScreenProps {
   onBackToMenu: () => void;
 }
 
-const KITCHEN_STAGES: {
-  stage: OrderStage;
-  title: string;
-  subtitle: string;
-  icon: typeof Check;
-}[] = [
-  {
-    stage: 0,
-    title: 'Pedido Confirmado',
-    subtitle: 'Comanda enviada para a chapa e estação de preparo',
-    icon: Check,
-  },
-  {
-    stage: 1,
-    title: 'Na Grelha em Brasa',
-    subtitle: 'Selando os blends maturados no ferro quente',
-    icon: Flame,
-  },
-  {
-    stage: 2,
-    title: 'Montagem e Embalagem',
-    subtitle: 'Tostando o brioche, finalizando fritas e lacrando a sacola',
-    icon: ChefHat,
-  },
-  {
-    stage: 3,
-    title: 'Pronto',
-    subtitle: 'Aguardando retirada no balcão ou em rota com o entregador',
-    icon: PackageCheck,
-  },
-];
+const STAGE_ICONS: Record<OrderStage, typeof Check> = {
+  0: Check,
+  1: Flame,
+  2: ChefHat,
+  3: PackageCheck,
+};
 
 export function OrdersScreen({
   orders,
@@ -61,7 +37,7 @@ export function OrdersScreen({
           <button
             type="button"
             onClick={onBackToMenu}
-            className="min-h-[44px] px-5 py-2.5 rounded-lg bg-[#D3451B] hover:bg-[#B02D00] text-white text-[14px] font-semibold cursor-pointer"
+            className="min-h-[44px] px-5 py-2.5 rounded-lg bg-brand hover:bg-brand-hover text-white text-[14px] font-semibold cursor-pointer"
           >
             Fazer Pedido Agora
           </button>
@@ -74,7 +50,7 @@ export function OrdersScreen({
   const buyerAddress =
     activeOrder.fulfillment === 'delivery' && activeOrder.buyer.endereco
       ? `${activeOrder.buyer.endereco} · ${activeOrder.neighborhoodLabel}`
-      : `TOP Lanches · Jardim Rosas · Francisco Morato - SP · ${activeOrder.neighborhoodLabel}`;
+      : `${STORE_INFO.name} · ${STORE_INFO.neighborhood} · ${STORE_INFO.city} · ${activeOrder.neighborhoodLabel}`;
 
   return (
     <div className="space-y-8 pb-16">
@@ -103,7 +79,7 @@ export function OrdersScreen({
         <section className="lg:col-span-7 bg-[#FFFFFF] border border-[#EAEAEA] rounded-xl p-5 sm:p-6 space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[#EAEAEA]">
             <div className="flex items-center gap-2.5">
-              <Clock className="w-5 h-5 text-[#D3451B]" />
+              <Clock className="w-5 h-5 text-brand" />
               <div>
                 <p className="text-[12px] text-[#5A413A]">
                   {activeOrder.fulfillment === 'pickup'
@@ -129,7 +105,7 @@ export function OrdersScreen({
 
           <ol className="space-y-4">
             {KITCHEN_STAGES.map((step) => {
-              const Icon = step.icon;
+              const Icon = STAGE_ICONS[step.stage];
               const isDone = activeOrder.stage > step.stage;
               const isCurrent = activeOrder.stage === step.stage;
 
@@ -138,7 +114,7 @@ export function OrdersScreen({
                   key={step.stage}
                   className={`flex items-start gap-3.5 p-3.5 rounded-xl border transition-colors ${
                     isCurrent
-                      ? 'border-[#D3451B] bg-[#FCF9F8]'
+                      ? 'border-brand bg-surface'
                       : isDone
                       ? 'border-[#EAEAEA] bg-[#FFFFFF]'
                       : 'border-[#EAEAEA] bg-[#FFFFFF] opacity-55'
@@ -147,7 +123,7 @@ export function OrdersScreen({
                   <div
                     className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
                       isCurrent
-                        ? 'bg-[#D3451B] text-[#FFFFFF]'
+                        ? 'bg-brand text-[#FFFFFF]'
                         : isDone
                         ? 'bg-[#16A34A] text-[#FFFFFF]'
                         : 'bg-[#F0EDED] text-[#8E7069]'
@@ -161,7 +137,7 @@ export function OrdersScreen({
                         {step.title}
                       </p>
                       {isCurrent && (
-                        <span className="text-[12px] font-semibold text-[#D3451B]">
+                        <span className="text-[12px] font-semibold text-brand">
                           Em andamento
                         </span>
                       )}

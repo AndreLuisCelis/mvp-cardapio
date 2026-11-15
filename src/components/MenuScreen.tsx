@@ -113,7 +113,7 @@ export function MenuScreen({
                 </div>
 
                 <h1 className="text-[30px] sm:text-[38px] font-extrabold leading-[1.14] tracking-[-0.03em] text-[#1C1B1B] text-balance">
-                  {STORE_INFO.name}: lanches, dogs e combos caprichados.
+                  {STORE_INFO.heroHeadline}
                 </h1>
 
                 <p className="text-[15px] leading-[1.55] text-[#5A413A] max-w-[46ch]">
@@ -126,7 +126,7 @@ export function MenuScreen({
                 <button
                   type="button"
                   onClick={() => onOpenCustomizer(heroItem)}
-                  className="min-h-[48px] px-6 py-3 rounded-lg bg-[#D3451B] hover:bg-[#B02D00] active:scale-[0.98] text-white text-[15px] font-semibold transition-all cursor-pointer tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D3451B]"
+                  className="min-h-[48px] px-6 py-3 rounded-lg bg-brand hover:bg-brand-hover active:scale-[0.98] text-white text-[15px] font-semibold transition-all cursor-pointer tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                 >
                   Pedir {heroItem.name} · {formatBRL(heroItem.price)}
                 </button>
@@ -163,9 +163,9 @@ export function MenuScreen({
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar combos, X-Tudo, hot dog, batata, bebidas..."
+              placeholder={STORE_INFO.searchPlaceholder}
               aria-label="Buscar itens do cardápio"
-              className="w-full min-h-[44px] pl-10 pr-10 py-2.5 bg-[#FFFFFF] border border-[#EAEAEA] focus:border-[#D3451B] focus:outline-none rounded-[10px] text-[14px] text-[#1C1B1B] placeholder:text-[#8E7069] transition-colors"
+              className="w-full min-h-[44px] pl-10 pr-10 py-2.5 bg-[#FFFFFF] border border-[#EAEAEA] focus:border-brand focus:outline-none rounded-[10px] text-[14px] text-[#1C1B1B] placeholder:text-[#8E7069] transition-colors"
             />
             {searchQuery && (
               <button
@@ -193,7 +193,7 @@ export function MenuScreen({
                   aria-selected={isActive}
                   type="button"
                   onClick={() => setSelectedCategory(tab.id)}
-                  className={`min-h-[44px] px-4 py-2 rounded-full text-[13px] font-semibold whitespace-nowrap shrink-0 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D3451B] ${
+                  className={`min-h-[44px] px-4 py-2 rounded-full text-[13px] font-semibold whitespace-nowrap shrink-0 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${
                     isActive
                       ? 'bg-[#1A1A1A] text-[#FFFFFF] border border-[#1A1A1A]'
                       : 'bg-[#FFFFFF] text-[#1A1A1A] border border-[#EAEAEA] hover:border-[#D9D9D9]'
@@ -237,7 +237,7 @@ export function MenuScreen({
                     <button
                       type="button"
                       onClick={() => onOpenCustomizer(item)}
-                      className="w-full block text-left cursor-pointer group focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D3451B]"
+                      className="w-full block text-left cursor-pointer group focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
                     >
                       <div className="aspect-[4/3] w-full bg-[#F6F3F2] overflow-hidden">
                         <ResilientImage
@@ -248,7 +248,7 @@ export function MenuScreen({
                       </div>
                       <div className="p-4 space-y-1.5">
                         <div className="flex items-center justify-between gap-2 text-[12px] text-[#5A413A]">
-                          <span className="font-semibold text-[#D3451B]">
+                          <span className="font-semibold text-brand">
                             {item.dietaryNote || item.categoryLabel}
                           </span>
                           <span className="inline-flex items-center gap-1 font-semibold text-[#1C1B1B] tabular-nums">
@@ -291,7 +291,7 @@ export function MenuScreen({
                           type="button"
                           onClick={() => onQuickAdd(item)}
                           aria-label={`Adicionar ${item.name}`}
-                          className="min-h-[38px] min-w-[38px] px-3 py-1.5 rounded-full bg-[#D3451B] hover:bg-[#B02D00] text-white text-[12px] font-semibold inline-flex items-center justify-center gap-1 whitespace-nowrap shrink-0 transition-colors cursor-pointer"
+                          className="min-h-[38px] min-w-[38px] px-3 py-1.5 rounded-full bg-brand hover:bg-brand-hover text-white text-[12px] font-semibold inline-flex items-center justify-center gap-1 whitespace-nowrap shrink-0 transition-colors cursor-pointer"
                         >
                           <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
                           <span>Adicionar</span>
@@ -314,7 +314,7 @@ export function MenuScreen({
                           type="button"
                           onClick={() => onAdjustItemQuantity(item.id, 1)}
                           aria-label={`Adicionar mais uma unidade de ${item.name}`}
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-[#D3451B] hover:bg-[#FFFFFF] transition-colors cursor-pointer"
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-brand hover:bg-[#FFFFFF] transition-colors cursor-pointer"
                         >
                           <Plus className="w-3.5 h-3.5" strokeWidth={2.4} />
                         </button>
@@ -385,7 +385,7 @@ export function MenuScreen({
                         <button
                           type="button"
                           onClick={() => onOpenCustomizer(item)}
-                          className="flex-1 min-w-0 text-left space-y-1 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D3451B] rounded"
+                          className="flex-1 min-w-0 text-left space-y-1 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand rounded"
                         >
                           <h3 className="text-[16px] font-semibold leading-[1.3] text-[#1C1B1B] line-clamp-2">
                             {item.name}
@@ -441,7 +441,7 @@ export function MenuScreen({
                               type="button"
                               onClick={() => onQuickAdd(item)}
                               aria-label={`Adicionar ${item.name}`}
-                              className="min-h-[36px] min-w-[36px] px-3 py-1.5 rounded-full bg-[#D3451B] hover:bg-[#B02D00] text-white text-[12px] font-semibold inline-flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                              className="min-h-[36px] min-w-[36px] px-3 py-1.5 rounded-full bg-brand hover:bg-brand-hover text-white text-[12px] font-semibold inline-flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
                             >
                               <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
                               <span>Adicionar</span>
@@ -464,7 +464,7 @@ export function MenuScreen({
                               type="button"
                               onClick={() => onAdjustItemQuantity(item.id, 1)}
                               aria-label={`Adicionar mais uma unidade de ${item.name}`}
-                              className="w-8 h-8 rounded-full flex items-center justify-center text-[#D3451B] hover:bg-[#FFFFFF] transition-colors cursor-pointer"
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-brand hover:bg-[#FFFFFF] transition-colors cursor-pointer"
                             >
                               <Plus className="w-3.5 h-3.5" strokeWidth={2.4} />
                             </button>
