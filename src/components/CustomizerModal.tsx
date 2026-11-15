@@ -148,9 +148,17 @@ export function CustomizerModal({
               >
                 {item.name}
               </h2>
-              <span className="text-[18px] font-bold text-[#1C1B1B] tabular-nums shrink-0">
-                {formatBRL(item.price)}
-              </span>
+              <div className="flex flex-col items-end shrink-0">
+                {typeof item.originalPrice === 'number' &&
+                  item.originalPrice > item.price && (
+                    <span className="text-[13px] text-[#8E7069] line-through tabular-nums">
+                      {formatBRL(item.originalPrice)}
+                    </span>
+                  )}
+                <span className="text-[18px] font-bold text-[#1C1B1B] tabular-nums">
+                  {formatBRL(item.price)}
+                </span>
+              </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-[#5A413A] tabular-nums">
@@ -158,8 +166,12 @@ export function CustomizerModal({
                 <Star className="w-3.5 h-3.5 fill-[#F59E0B] text-[#F59E0B]" />
                 {item.rating.toFixed(1).replace('.', ',')} ({item.reviewCount})
               </span>
-              <span aria-hidden="true">·</span>
-              <span>{item.calories} kcal</span>
+              {item.calories ? (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span>{item.calories} kcal</span>
+                </>
+              ) : null}
               <span aria-hidden="true">·</span>
               <span>{item.prepMinutes}</span>
             </div>

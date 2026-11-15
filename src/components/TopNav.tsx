@@ -20,7 +20,7 @@ export function TopNav({
   const navItems: { id: AppScreen; label: string }[] = [
     { id: 'menu', label: 'Cardápio' },
     { id: 'combos', label: 'Combos' },
-    { id: 'hearth', label: 'Nossa Brasa' },
+    { id: 'hearth', label: 'A Lanchonete' },
     {
       id: 'orders',
       label: activeOrdersCount > 0 ? `Pedidos (${activeOrdersCount})` : 'Pedidos',
@@ -36,7 +36,7 @@ export function TopNav({
           onClick={() => onNavigate('menu')}
           className="text-lg sm:text-xl font-extrabold tracking-[-0.03em] text-[#1C1B1B] whitespace-nowrap shrink-0 cursor-pointer hover:text-[#D3451B] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D3451B] rounded"
         >
-          Artisanal Ember
+          TOP Lanches
         </button>
 
         {/* Zone 2: Clean single-line navigation links */}

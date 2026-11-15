@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { AlertCircle, ArrowLeft, MessageCircle, Minus, Plus, Trash2 } from 'lucide-react';
+import { STORE_INFO } from '../data/menu';
 import { BuyerData, CartItem, FulfillmentType, MenuItem } from '../types';
 import { formatBRL } from '../utils/format';
 import { ResilientImage } from './ResilientImage';
@@ -16,10 +17,18 @@ export interface NeighborhoodFeeOption {
 }
 
 const NEIGHBORHOOD_FEES: NeighborhoodFeeOption[] = [
-  { id: 'retirada', label: 'Retirada no Balcão', fee: 0, fulfillment: 'pickup' },
-  { id: 'centro', label: 'Centro', fee: 5, fulfillment: 'delivery' },
-  { id: 'jardim-primavera', label: 'Jardim Primavera', fee: 7, fulfillment: 'delivery' },
-  { id: 'vila-nova', label: 'Vila Nova', fee: 8, fulfillment: 'delivery' },
+  {
+    id: 'jardim-rosas',
+    label: `Entrega · ${STORE_INFO.neighborhood} (${STORE_INFO.city})`,
+    fee: STORE_INFO.deliveryFee,
+    fulfillment: 'delivery',
+  },
+  {
+    id: 'retirada',
+    label: 'Retirada no Balcão',
+    fee: 0,
+    fulfillment: 'pickup',
+  },
 ];
 
 interface CheckoutScreenProps {
@@ -70,7 +79,7 @@ export function CheckoutScreen({
   onQuickAdd,
   onPlaceOrder,
 }: CheckoutScreenProps) {
-  const [selectedNeighborhoodId, setSelectedNeighborhoodId] = useState<string>('retirada');
+  const [selectedNeighborhoodId, setSelectedNeighborhoodId] = useState<string>('jardim-rosas');
   const [tipPercent, setTipPercent] = useState<number>(0);
   const [nome, setNome] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
@@ -113,6 +122,12 @@ export function CheckoutScreen({
     }
 
     const isPickup = selectedNeighborhood.id === 'retirada';
+    if (!isPickup && subtotal < STORE_INFO.minOrder) {
+      setValidationError(
+        `O pedido mínimo para entrega é de ${formatBRL(STORE_INFO.minOrder)}. Adicione mais ${formatBRL(STORE_INFO.minOrder - subtotal)} ou selecione Retirada no Balcão.`
+      );
+      return;
+    }
     const nextMissing: {
       nome?: boolean;
       whatsapp?: boolean;
@@ -202,7 +217,7 @@ export function CheckoutScreen({
             Sua sacola está vazia
           </h1>
           <p className="text-[15px] text-[#5A413A] max-w-md mx-auto">
-            Comece escolhendo um dos nossos smash burgers na brasa, fritas rústicas com alecrim ou sodas artesanais.
+            Comece escolhendo um dos nossos combos, hot dogs, hambúrgueres, porções de batata ou bebidas da {STORE_INFO.name}.
           </p>
           <div className="pt-2">
             <button
@@ -614,6 +629,14 @@ export function CheckoutScreen({
               <span className="tabular-nums">{formatBRL(total)}</span>
             </div>
           </div>
+
+          {selectedNeighborhood.fulfillment === 'delivery' &&
+            subtotal < STORE_INFO.minOrder && (
+              <div className="px-3.5 py-2.5 rounded-[10px] border border-[#F59E0B] bg-[#FFFBEB] text-[13px] font-medium text-[#845300] tabular-nums">
+                Pedido mínimo para entrega: {formatBRL(STORE_INFO.minOrder)}. Faltam{' '}
+                {formatBRL(STORE_INFO.minOrder - subtotal)}.
+              </div>
+            )}
 
           <button
             type="submit"

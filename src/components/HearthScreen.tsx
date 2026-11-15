@@ -1,5 +1,7 @@
 import { Clock, Flame, MapPin } from 'lucide-react';
 import heroSmashImg from '../assets/images/hero_smash_burger_1794688358225.jpg';
+import { STORE_INFO } from '../data/menu';
+import { formatBRL } from '../utils/format';
 import { ResilientImage } from './ResilientImage';
 
 interface HearthScreenProps {
@@ -10,18 +12,18 @@ export function HearthScreen({ onExploreMenu }: HearthScreenProps) {
   const pillars = [
     {
       number: '01.',
-      title: 'Acém e Peito Maturados por 45 Dias',
-      body: 'Cortes selecionados de pasto moídos frescos todas as manhãs na proporção 80/20 para formar crosta caramelizada por fora e suculência por dentro.',
+      title: 'Combos Casal, Grande Fome e Individuais',
+      body: 'Opções pensadas para matar qualquer tamanho de fome, com batata frita crocante, nuggets e refrigerantes gelados.',
     },
     {
       number: '02.',
-      title: 'Brioche de Gergelim Assado de Manhã',
-      body: 'Fermentação lenta com manteiga de fazenda e tostado na chapa na hora do pedido para sustentar nossos molhos artesanais sem perder a maciez.',
+      title: 'Hambúrgueres no Brioche e Hot Dogs Completos',
+      body: 'Do clássico X-Salada ao X-Tudão e nossa linha Dog Saboroso com purê de batata, batata palha, bacon e molho cheddar.',
     },
     {
       number: '03.',
-      title: 'Chapa de Ferro e Brasa de Carvalho',
-      body: 'Selagem em alta temperatura com leve defumação natural, acompanhada de picles artesanais, cítricos tostados e batatas Asterix cortadas à mão.',
+      title: 'Entrega Rápida no Jardim Rosas e Região',
+      body: `Pedido mínimo de ${formatBRL(STORE_INFO.minOrder)}, taxa de entrega fixa de ${formatBRL(STORE_INFO.deliveryFee)} e tempo médio de ${STORE_INFO.deliveryTimeMin} minutos.`,
     },
   ];
 
@@ -31,13 +33,13 @@ export function HearthScreen({ onExploreMenu }: HearthScreenProps) {
         <div className="lg:col-span-6 p-6 sm:p-8 flex flex-col justify-between gap-6">
           <div className="space-y-3">
             <p className="text-[13px] font-semibold text-[#D3451B]">
-              Nossa Brasa e Origem dos Ingredientes
+              {STORE_INFO.name} · {STORE_INFO.neighborhood}
             </p>
             <h1 className="text-[28px] sm:text-[36px] font-extrabold leading-[1.15] tracking-[-0.03em] text-[#1C1B1B] text-balance">
-              Construído em torno da crosta perfeita, do pão fresco e do fogo real.
+              Lanches caprichados, porções e combos com preço justo.
             </h1>
             <p className="text-[15px] leading-[1.6] text-[#5A413A]">
-              A Artisanal Ember nasceu na Rua Oscar Freire, 142 com um cardápio enxuto e preciso: quatro hambúrgueres autorais, fritas rústicas duplamente fritas e sodas preparadas na casa.
+              Atendendo {STORE_INFO.neighborhood} e toda a região de {STORE_INFO.city} com hambúrgueres no pão de brioche, hot dogs tradicionais paulistas, porções de batata com cheddar e bebidas sempre geladas.
             </p>
           </div>
 
@@ -55,7 +57,7 @@ export function HearthScreen({ onExploreMenu }: HearthScreenProps) {
         <div className="lg:col-span-6 bg-[#F6F3F2] min-h-[240px]">
           <ResilientImage
             src={heroSmashImg}
-            alt="Cozinha e brasa da Artisanal Ember"
+            alt={`Lanches e combos da ${STORE_INFO.name}`}
             className="w-full h-full object-cover"
           />
         </div>
@@ -84,9 +86,11 @@ export function HearthScreen({ onExploreMenu }: HearthScreenProps) {
         <div className="flex items-start gap-3">
           <MapPin className="w-5 h-5 text-[#D3451B] shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <h3 className="text-[15px] font-bold text-[#1C1B1B]">Endereço</h3>
+            <h3 className="text-[15px] font-bold text-[#1C1B1B]">Localização</h3>
             <p className="text-[14px] text-[#5A413A]">
-              Rua Oscar Freire, 142 · Jardins<br />Retirada no balcão e delivery local
+              {STORE_INFO.neighborhood} · {STORE_INFO.city}
+              <br />
+              Retirada no balcão e delivery
             </p>
           </div>
         </div>
@@ -94,9 +98,11 @@ export function HearthScreen({ onExploreMenu }: HearthScreenProps) {
         <div className="flex items-start gap-3">
           <Clock className="w-5 h-5 text-[#D3451B] shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <h3 className="text-[15px] font-bold text-[#1C1B1B]">Horário da Cozinha</h3>
+            <h3 className="text-[15px] font-bold text-[#1C1B1B]">Tempo de Entrega</h3>
             <p className="text-[14px] text-[#5A413A] tabular-nums">
-              Seg a Qui: 11h30 – 22h30<br />Sex a Dom: 11h30 – 23h30
+              Média de {STORE_INFO.deliveryTimeMin} minutos
+              <br />
+              Taxa fixa: {formatBRL(STORE_INFO.deliveryFee)}
             </p>
           </div>
         </div>
@@ -104,9 +110,11 @@ export function HearthScreen({ onExploreMenu }: HearthScreenProps) {
         <div className="flex items-start gap-3">
           <Flame className="w-5 h-5 text-[#D3451B] shrink-0 mt-0.5" />
           <div className="space-y-1">
-            <h3 className="text-[15px] font-bold text-[#1C1B1B]">Alergênicos</h3>
-            <p className="text-[14px] text-[#5A413A]">
-              Opção de envolto em alface em todos os burgers. Cozinha livre de amendoim.
+            <h3 className="text-[15px] font-bold text-[#1C1B1B]">Pedido Mínimo</h3>
+            <p className="text-[14px] text-[#5A413A] tabular-nums">
+              A partir de {formatBRL(STORE_INFO.minOrder)} para entrega.
+              <br />
+              Pagamento via Pix, cartão ou dinheiro.
             </p>
           </div>
         </div>

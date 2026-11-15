@@ -1,0 +1,369 @@
+{
+  "estabelecimento": "TOP Lanches",
+  "bairro": "Jardim Rosas",
+  "cidade": "Francisco Morato - SP",
+  "pedido_minimo": 20.0,
+  "taxa_entrega": 3.99,
+  "tempo_entrega_min": "20-30",
+  "categorias": [
+    {
+      "nome": "Combos Casal",
+      "itens": [
+        {
+          "nome": "Combo Casal Simples",
+          "descricao": "2 X-Burguer, 300g de batata frita, 12 Nuggets, Coca-Cola 600ml",
+          "preco": 59.9,
+          "preco_original": null
+        },
+        {
+          "nome": "Combo Casal Salada",
+          "descricao": "2 X-Salada, 300g de batata frita, 12 Nuggets, Coca-Cola 600ml",
+          "preco": 64.9,
+          "preco_original": null
+        },
+        {
+          "nome": "Combo Casal Salada Bacon",
+          "descricao": "2 X-Salada Bacon, 300g de batata frita, 12 Nuggets, Coca-Cola 600ml",
+          "preco": 69.9,
+          "preco_original": null
+        },
+        {
+          "nome": "Combo Casal Bacon",
+          "descricao": "2 X-Bacon, 300g de batata frita, 12 Nuggets, Coca-Cola 600ml",
+          "preco": 74.9,
+          "preco_original": null
+        },
+        {
+          "nome": "Combo Casal Tudo",
+          "descricao": "2 X-Tudo, 300g de batata frita, 12 Nuggets, Coca-Cola 600ml",
+          "preco": 79.9,
+          "preco_original": null
+        },
+        {
+          "nome": "Combo Casal Tudão",
+          "descricao": "2 X-Tudão, 300g de batata frita, 12 Nuggets, Coca-Cola 600ml",
+          "preco": 84.9,
+          "preco_original": null
+        }
+      ]
+    },
+    {
+      "nome": "Combos Grande Fome",
+      "itens": [
+        {
+          "nome": "Combo Individual Tudo",
+          "descricao": "2 X-Tudo, 300g de batata frita",
+          "preco": 38.9,
+          "preco_original": 49.9
+        },
+        {
+          "nome": "Combo Individual Simples",
+          "descricao": "2 X-Burguer, 300g de batata frita",
+          "preco": 44.9,
+          "preco_original": null
+        },
+        {
+          "nome": "Combo Individual Salada",
+          "descricao": "2 X-Salada, 300g de batata frita",
+          "preco": 44.9,
+          "preco_original": null
+        },
+        {
+          "nome": "Combo Individual Bacon",
+          "descricao": "2 X-Bacon, 300g de batata frita",
+          "preco": 49.9,
+          "preco_original": null
+        },
+        {
+          "nome": "Combo Individual Salada Bacon",
+          "descricao": "2 X-Salada Bacon, 300g de batata frita",
+          "preco": 49.9,
+          "preco_original": null
+        },
+        {
+          "nome": "Combo Individual Tudão",
+          "descricao": "2 X-Tudão, 300g de batata frita",
+          "preco": 54.9,
+          "preco_original": null
+        }
+      ]
+    },
+    {
+      "nome": "Combos Individuais",
+      "itens": [
+        {
+          "nome": "Combo Dog Simples",
+          "descricao": "1 Dog Simples, batata frita, 1 bebida em lata",
+          "preco": 27.0,
+          "preco_original": 36.0
+        },
+        {
+          "nome": "Combo Dog Bacon",
+          "descricao": "1 Dog Bacon, batata frita, 1 bebida em lata",
+          "preco": 30.5,
+          "preco_original": 39.5
+        },
+        {
+          "nome": "Combo X-Bacon Duplo",
+          "descricao": "1 X-Bacon Duplo, batata frita, 1 bebida em lata",
+          "preco": 31.5,
+          "preco_original": 42.5
+        },
+        {
+          "nome": "Combo X-Tudão",
+          "descricao": "1 X-Tudão, batata frita, 1 bebida em lata",
+          "preco": 34.5,
+          "preco_original": 45.5
+        },
+        {
+          "nome": "Combo X-Salada",
+          "descricao": "1 X-Salada, batata frita, 1 bebida em lata",
+          "preco": 40.0,
+          "preco_original": null
+        },
+        {
+          "nome": "Combo Big Dog",
+          "descricao": "1 Big Dog, batata frita, 1 bebida em lata",
+          "preco": 41.0,
+          "preco_original": null
+        },
+        {
+          "nome": "Combo X-Tudo",
+          "descricao": "1 X-Tudo, batata frita, 1 bebida em lata",
+          "preco": 43.5,
+          "preco_original": null
+        }
+      ]
+    },
+    {
+      "nome": "Dog Saboroso",
+      "itens": [
+        {
+          "nome": "X-Hot Bacon Egg Especial",
+          "descricao": "Pão de dog, 1 salsicha, maionese, molho de tomate, batata palha, purê de batata, bacon, ovo e molho cheddar",
+          "preco": 12.5,
+          "preco_original": 18.5
+        },
+        {
+          "nome": "Dog Simples",
+          "descricao": "Pão de dog, 1 salsicha, maionese, molho de tomate, batata palha e purê de batata",
+          "preco": 13.0,
+          "preco_original": null
+        },
+        {
+          "nome": "Dog Especial",
+          "descricao": "Pão de dog, 1 salsicha, maionese, molho de tomate, batata palha, purê de batata e molho cheddar",
+          "preco": 13.5,
+          "preco_original": null
+        },
+        {
+          "nome": "Dog Duplo",
+          "descricao": "Pão de dog, 2 salsichas, maionese, molho de tomate, batata palha, purê de batata e molho cheddar",
+          "preco": 16.0,
+          "preco_original": null
+        },
+        {
+          "nome": "X-Hot Bacon",
+          "descricao": "Pão de dog, 1 salsicha, maionese, molho de tomate, batata palha, purê de batata e bacon",
+          "preco": 16.5,
+          "preco_original": null
+        },
+        {
+          "nome": "X-Hot Bacon Especial",
+          "descricao": "Pão de dog, 1 salsicha, maionese, molho de tomate, batata palha, purê de batata, bacon e molho cheddar",
+          "preco": 17.0,
+          "preco_original": null
+        },
+        {
+          "nome": "Big Dog",
+          "descricao": "Pão de dog, 2 salsichas, maionese, molho de tomate, batata palha, purê de batata, bacon e molho cheddar",
+          "preco": 18.0,
+          "preco_original": null
+        },
+        {
+          "nome": "X-Hot Bacon Egg",
+          "descricao": "Pão de dog, 1 salsicha, maionese, molho de tomate, batata palha, purê de batata, bacon e ovo",
+          "preco": 18.0,
+          "preco_original": null
+        },
+        {
+          "nome": "Hot Dog Linguiça Especial",
+          "descricao": "Pão de dog, 1 linguiça toscana, maionese, 2 fatias de queijo, batata palha, purê de batata e molho cheddar",
+          "preco": 19.0,
+          "preco_original": null
+        },
+        {
+          "nome": "Hot Dog Linguiça Bacon",
+          "descricao": "Pão de dog, 1 linguiça toscana, bacon, maionese, 1 fatia de queijo, purê de batata e molho cheddar",
+          "preco": 22.0,
+          "preco_original": null
+        }
+      ]
+    },
+    {
+      "nome": "Hambúrguer Sensacional",
+      "itens": [
+        {
+          "nome": "X-Tudo",
+          "descricao": "Pão de brioche, 2 hambúrgueres, maionese, 1 fatia de queijo cheddar, bacon, ovo, alface e tomate",
+          "preco": 14.5,
+          "preco_original": 20.5
+        },
+        {
+          "nome": "Hambúrguer Simples",
+          "descricao": "Pão de brioche, 1 hambúrguer, maionese e 1 fatia de queijo cheddar",
+          "preco": 15.5,
+          "preco_original": null
+        },
+        {
+          "nome": "X-Tudão",
+          "descricao": "Pão de brioche, 2 hambúrgueres, maionese, 2 fatias de queijo cheddar, bacon, ovo, alface, tomate e molho cheddar",
+          "preco": 16.5,
+          "preco_original": 22.5
+        },
+        {
+          "nome": "Hambúrguer Especial",
+          "descricao": "Pão de brioche, 1 hambúrguer, maionese, 2 fatias de queijo cheddar, alface e purê de batata",
+          "preco": 16.5,
+          "preco_original": null
+        },
+        {
+          "nome": "X-Egg",
+          "descricao": "Pão de brioche, 1 hambúrguer, maionese, 1 fatia de queijo cheddar, ovo e alface",
+          "preco": 16.5,
+          "preco_original": null
+        },
+        {
+          "nome": "X-Salada",
+          "descricao": "Pão de brioche, 1 hambúrguer, maionese, 1 fatia de queijo cheddar, alface e tomate",
+          "preco": 17.0,
+          "preco_original": null
+        },
+        {
+          "nome": "X-Salada Especial",
+          "descricao": "Pão de brioche, 1 hambúrguer, maionese, 1 fatia de queijo cheddar, alface, tomate, batata palha e purê de batata",
+          "preco": 17.5,
+          "preco_original": null
+        },
+        {
+          "nome": "X-Salada Bacon",
+          "descricao": "Pão de brioche, 1 hambúrguer, maionese, 1 fatia de queijo cheddar, alface, tomate e bacon",
+          "preco": 18.0,
+          "preco_original": null
+        },
+        {
+          "nome": "X-Egg Bacon",
+          "descricao": "Pão de brioche, 1 hambúrguer, maionese, 1 fatia de queijo cheddar, bacon, ovo e alface",
+          "preco": 18.5,
+          "preco_original": null
+        },
+        {
+          "nome": "X-Bacon Duplo",
+          "descricao": "Pão de brioche, 2 hambúrgueres, maionese, 2 fatias de queijo cheddar, bacon e molho cheddar",
+          "preco": 19.5,
+          "preco_original": null
+        }
+      ]
+    },
+    {
+      "nome": "Porção de Batata",
+      "itens": [
+        {
+          "nome": "Batata Grande",
+          "descricao": "Batatas palito cobertas com molho cheddar",
+          "preco": 19.0,
+          "preco_original": 28.0
+        },
+        {
+          "nome": "Batata Pequena",
+          "descricao": "Batatas palito cobertas com molho cheddar",
+          "preco": 20.0,
+          "preco_original": null
+        },
+        {
+          "nome": "Batata Média",
+          "descricao": "Batatas palito cobertas com molho cheddar",
+          "preco": 24.0,
+          "preco_original": null
+        },
+        {
+          "nome": "Batata Especial",
+          "descricao": "Batatas palito cobertas com molho cheddar e finalizadas com bacon",
+          "preco": 24.0,
+          "preco_original": 33.0
+        }
+      ]
+    },
+    {
+      "nome": "Bebidas",
+      "itens": [
+        {
+          "nome": "Coca-Cola",
+          "descricao": "Lata 350ml",
+          "preco": 8.0,
+          "preco_original": null
+        },
+        {
+          "nome": "Fanta Laranja",
+          "descricao": "Lata 350ml",
+          "preco": 8.0,
+          "preco_original": null
+        },
+        {
+          "nome": "Fanta Uva",
+          "descricao": "Lata 350ml",
+          "preco": 8.0,
+          "preco_original": null
+        },
+        {
+          "nome": "Guaraná Antarctica",
+          "descricao": "Lata 350ml",
+          "preco": 8.0,
+          "preco_original": null
+        },
+        {
+          "nome": "Suco Del Valle Maracujá",
+          "descricao": "Lata 290ml",
+          "preco": 9.0,
+          "preco_original": null
+        },
+        {
+          "nome": "Suco Del Valle Uva",
+          "descricao": "Lata 290ml",
+          "preco": 9.0,
+          "preco_original": null
+        },
+        {
+          "nome": "Suco Del Valle Pêssego",
+          "descricao": "Lata 290ml",
+          "preco": 9.0,
+          "preco_original": null
+        },
+        {
+          "nome": "Convenção",
+          "descricao": "Garrafa 2 Litros",
+          "preco": 12.0,
+          "preco_original": null
+        },
+        {
+          "nome": "Coca-Cola",
+          "descricao": "Garrafa 600ml",
+          "preco": 13.0,
+          "preco_original": null
+        },
+        {
+          "nome": "Guaraná Antarctica",
+          "descricao": "Garrafa 2 Litros",
+          "preco": 20.0,
+          "preco_original": null
+        },
+        {
+          "nome": "Coca-Cola",
+          "descricao": "Garrafa 2 Litros",
+          "preco": 25.0,
+          "preco_original": null
+        }
+      ]
+    }
+  ]
+}

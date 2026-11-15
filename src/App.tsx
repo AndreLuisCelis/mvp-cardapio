@@ -6,7 +6,7 @@ import { HearthScreen } from './components/HearthScreen';
 import { MenuScreen } from './components/MenuScreen';
 import { OrdersScreen } from './components/OrdersScreen';
 import { TopNav } from './components/TopNav';
-import { MENU_ITEMS } from './data/menu';
+import { MENU_ITEMS, STORE_INFO } from './data/menu';
 import {
   AppScreen,
   BuyerData,
@@ -55,7 +55,7 @@ export default function App() {
   const suggestedPairings = useMemo(
     () =>
       MENU_ITEMS.filter(
-        (m) => m.category === 'sides' || m.category === 'drinks'
+        (m) => m.category === 'porcao-de-batata' || m.category === 'bebidas'
       ).slice(0, 4),
     []
   );
@@ -336,7 +336,10 @@ export default function App() {
 
       <footer className="border-t border-[#EAEAEA] bg-[#FFFFFF] py-6 px-4 sm:px-6 mt-auto">
         <div className="max-w-[980px] mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-[13px] text-[#5A413A]">
-          <p>Artisanal Ember · Rua Oscar Freire, 142 · Aberto diariamente 11h30 – 22h30</p>
+          <p>
+            {STORE_INFO.name} · {STORE_INFO.neighborhood}, {STORE_INFO.city} · Entrega em{' '}
+            {STORE_INFO.deliveryTimeMin} min · Pedido mín. {formatBRL(STORE_INFO.minOrder)}
+          </p>
           <div className="flex flex-wrap items-center gap-5">
             <button
               type="button"
@@ -350,7 +353,7 @@ export default function App() {
               onClick={() => handleNavigate('hearth')}
               className="hover:text-[#1C1B1B] cursor-pointer"
             >
-              Nossa Brasa
+              A Lanchonete
             </button>
             <button
               type="button"

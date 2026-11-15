@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Minus, Plus, Search, Star, X } from 'lucide-react';
+import { MENU_CATEGORIES, STORE_INFO } from '../data/menu';
 import { CartItem, MenuCategory, MenuItem } from '../types';
 import { formatBRL } from '../utils/format';
 import { ResilientImage } from './ResilientImage';
@@ -13,12 +14,10 @@ interface MenuScreenProps {
   onAdjustItemQuantity: (menuItemId: string, delta: number) => void;
 }
 
-const CATEGORY_TABS: { id: MenuCategory; label: string }[] = [
-  { id: 'all', label: 'Todo o Cardápio' },
-  { id: 'burgers', label: 'Hambúrgueres' },
-  { id: 'combos', label: 'Combos' },
-  { id: 'sides', label: 'Acompanhamentos' },
-  { id: 'drinks', label: 'Bebidas Artesanais' },
+const COMBO_CATEGORY_KEYS: Exclude<MenuCategory, 'all' | 'combos'>[] = [
+  'combos-casal',
+  'combos-grande-fome',
+  'combos-individuais',
 ];
 
 export function MenuScreen({
@@ -32,8 +31,28 @@ export function MenuScreen({
   const [selectedCategory, setSelectedCategory] = useState<MenuCategory>(initialCategory);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const effectiveCategory =
-    initialCategory === 'combos' && selectedCategory === 'all' ? 'combos' : selectedCategory;
+  const isCombosView = initialCategory === 'combos';
+
+  const categoryTabs = useMemo<{ id: MenuCategory; label: string }[]>(() => {
+    if (isCombosView) {
+      return [
+        { id: 'combos', label: 'Todos os Combos' },
+        ...MENU_CATEGORIES.filter((c) => c.isCombo).map((c) => ({
+          id: c.key,
+          label: c.title,
+        })),
+      ];
+    }
+    return [
+      { id: 'all', label: 'Todo o Cardápio' },
+      ...MENU_CATEGORIES.map((c) => ({
+        id: c.key,
+        label: c.title,
+      })),
+    ];
+  }, [isCombosView]);
+
+  const effectiveCategory = selectedCategory;
 
   const heroItem = useMemo(() => items.find((item) => item.isHero) ?? items[0], [items]);
 
@@ -46,12 +65,16 @@ export function MenuScreen({
     const query = searchQuery.trim().toLowerCase();
     return items.filter((item) => {
       const matchesCategory =
-        effectiveCategory === 'all' || item.category === effectiveCategory;
+        effectiveCategory === 'all'
+          ? true
+          : effectiveCategory === 'combos'
+          ? COMBO_CATEGORY_KEYS.includes(item.category)
+          : item.category === effectiveCategory;
       const matchesSearch =
         !query ||
         item.name.toLowerCase().includes(query) ||
         item.description.toLowerCase().includes(query) ||
-        item.ingredientsSummary.toLowerCase().includes(query);
+        item.categoryLabel.toLowerCase().includes(query);
       return matchesCategory && matchesSearch;
     });
   }, [items, effectiveCategory, searchQuery]);
@@ -62,28 +85,19 @@ export function MenuScreen({
       .reduce((sum, ci) => sum + ci.quantity, 0);
 
   const groupedSections = useMemo(() => {
-    const order: { key: Exclude<MenuCategory, 'all'>; title: string }[] = [
-      { key: 'burgers', title: 'Hambúrgueres na Brasa' },
-      { key: 'combos', title: 'Combos e Caixas Especiais' },
-      { key: 'sides', title: 'Acompanhamentos Rústicos' },
-      { key: 'drinks', title: 'Bebidas Artesanais da Casa' },
-    ];
-
-    return order
-      .map((section) => ({
-        ...section,
-        items: filteredItems.filter((item) => item.category === section.key),
-      }))
-      .filter((section) => section.items.length > 0);
+    return MENU_CATEGORIES.map((section) => ({
+      ...section,
+      items: filteredItems.filter((item) => item.category === section.key),
+    })).filter((section) => section.items.length > 0);
   }, [filteredItems]);
 
   const showSpotlightAndFeatured =
-    !searchQuery.trim() && (effectiveCategory === 'all' || effectiveCategory === 'burgers');
+    !searchQuery.trim() && effectiveCategory === 'all';
 
   return (
     <div className="space-y-8 pb-28 sm:pb-16">
       {/* Storefront Hero Spotlight */}
-      {effectiveCategory !== 'combos' && !searchQuery.trim() && (
+      {!isCombosView && !searchQuery.trim() && heroItem && (
         <section aria-label="Destaque da casa">
           <div className="bg-[#FFFFFF] border border-[#EAEAEA] rounded-xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 lg:items-stretch">
             <div className="lg:col-span-6 p-5 sm:p-8 flex flex-col justify-between gap-6">
@@ -91,17 +105,20 @@ export function MenuScreen({
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-[#5A413A]">
                   <span className="font-semibold text-[#16A34A]">Aberto agora</span>
                   <span aria-hidden="true">·</span>
-                  <span>Rua Oscar Freire, 142</span>
+                  <span>
+                    {STORE_INFO.neighborhood}, {STORE_INFO.city}
+                  </span>
                   <span aria-hidden="true">·</span>
-                  <span>Retirada em 18–25 min</span>
+                  <span>Entrega em {STORE_INFO.deliveryTimeMin} min</span>
                 </div>
 
                 <h1 className="text-[30px] sm:text-[38px] font-extrabold leading-[1.14] tracking-[-0.03em] text-[#1C1B1B] text-balance">
-                  Smash burgers na brasa, preparados na hora.
+                  {STORE_INFO.name}: lanches, dogs e combos caprichados.
                 </h1>
 
                 <p className="text-[15px] leading-[1.55] text-[#5A413A] max-w-[46ch]">
-                  {heroItem.description}
+                  Destaque do dia: <strong>{heroItem.name}</strong> ({heroItem.description}). Pedido mínimo de{' '}
+                  {formatBRL(STORE_INFO.minOrder)} e entrega fixa de {formatBRL(STORE_INFO.deliveryFee)}.
                 </p>
               </div>
 
@@ -136,8 +153,8 @@ export function MenuScreen({
 
       {/* Search & Category Filter Bar */}
       <section aria-label="Filtros do cardápio" className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-col gap-3">
+          <div className="relative max-w-md">
             <Search
               className="w-4 h-4 text-[#8E7069] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
               strokeWidth={2}
@@ -146,7 +163,7 @@ export function MenuScreen({
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar hambúrgueres, trufa, fritas, bebidas..."
+              placeholder="Buscar combos, X-Tudo, hot dog, batata, bebidas..."
               aria-label="Buscar itens do cardápio"
               className="w-full min-h-[44px] pl-10 pr-10 py-2.5 bg-[#FFFFFF] border border-[#EAEAEA] focus:border-[#D3451B] focus:outline-none rounded-[10px] text-[14px] text-[#1C1B1B] placeholder:text-[#8E7069] transition-colors"
             />
@@ -167,7 +184,7 @@ export function MenuScreen({
             aria-label="Categorias do cardápio"
             className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5"
           >
-            {CATEGORY_TABS.map((tab) => {
+            {categoryTabs.map((tab) => {
               const isActive = effectiveCategory === tab.id;
               return (
                 <button
@@ -190,22 +207,27 @@ export function MenuScreen({
         </div>
       </section>
 
-      {/* Featured Launches */}
-      {showSpotlightAndFeatured && (
+      {/* Featured Launches / Offers */}
+      {showSpotlightAndFeatured && featuredItems.length > 0 && (
         <section aria-labelledby="featured-heading" className="space-y-4">
           <div className="flex items-baseline justify-between gap-4">
             <h2
               id="featured-heading"
               className="text-[20px] sm:text-[22px] font-bold tracking-[-0.02em] text-[#1C1B1B]"
             >
-              Destaques do Chef
+              Ofertas em Destaque
             </h2>
-            <span className="text-[13px] text-[#5A413A]">Assados sobre brasa de carvalho</span>
+            <span className="text-[13px] text-[#5A413A]">
+              Preços promocionais por tempo limitado
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {featuredItems.map((item) => {
               const qtyInBag = getItemCountInBag(item.id);
+              const hasPromo =
+                typeof item.originalPrice === 'number' &&
+                item.originalPrice > item.price;
               return (
                 <article
                   key={item.id}
@@ -226,7 +248,9 @@ export function MenuScreen({
                       </div>
                       <div className="p-4 space-y-1.5">
                         <div className="flex items-center justify-between gap-2 text-[12px] text-[#5A413A]">
-                          <span>{item.dietaryNote || 'Especial'}</span>
+                          <span className="font-semibold text-[#D3451B]">
+                            {item.dietaryNote || item.categoryLabel}
+                          </span>
                           <span className="inline-flex items-center gap-1 font-semibold text-[#1C1B1B] tabular-nums">
                             <Star className="w-3.5 h-3.5 fill-[#F59E0B] text-[#F59E0B]" />
                             {item.rating.toFixed(1).replace('.', ',')}
@@ -236,16 +260,23 @@ export function MenuScreen({
                           {item.name}
                         </h3>
                         <p className="text-[13px] leading-[1.45] text-[#5A413A] line-clamp-2">
-                          {item.ingredientsSummary}
+                          {item.description}
                         </p>
                       </div>
                     </button>
                   </div>
 
                   <div className="px-4 pb-4 pt-2 flex items-center justify-between gap-3">
-                    <span className="text-[16px] font-bold text-[#1C1B1B] tabular-nums">
-                      {formatBRL(item.price)}
-                    </span>
+                    <div className="flex flex-col">
+                      {hasPromo && item.originalPrice != null && (
+                        <span className="text-[12px] text-[#8E7069] line-through tabular-nums">
+                          {formatBRL(item.originalPrice)}
+                        </span>
+                      )}
+                      <span className="text-[16px] font-bold text-[#1C1B1B] tabular-nums">
+                        {formatBRL(item.price)}
+                      </span>
+                    </div>
 
                     {qtyInBag === 0 ? (
                       <div className="flex items-center gap-1.5">
@@ -310,7 +341,7 @@ export function MenuScreen({
             type="button"
             onClick={() => {
               setSearchQuery('');
-              setSelectedCategory('all');
+              setSelectedCategory(isCombosView ? 'combos' : 'all');
             }}
             className="min-h-[44px] px-5 py-2.5 rounded-lg bg-[#1A1A1A] text-white text-[14px] font-semibold cursor-pointer"
           >
@@ -340,6 +371,10 @@ export function MenuScreen({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 {section.items.map((item) => {
                   const qtyInBag = getItemCountInBag(item.id);
+                  const hasPromo =
+                    typeof item.originalPrice === 'number' &&
+                    item.originalPrice > item.price;
+
                   return (
                     <article
                       key={item.id}
@@ -356,18 +391,26 @@ export function MenuScreen({
                             {item.name}
                           </h3>
                           <p className="text-[13px] leading-[1.45] text-[#5A413A] line-clamp-2">
-                            {item.ingredientsSummary}
+                            {item.description}
                           </p>
                           <p className="text-[12px] text-[#8E7069] tabular-nums pt-0.5">
-                            {item.calories} kcal · {item.prepMinutes}
+                            {item.calories ? `${item.calories} kcal · ` : ''}
+                            {item.prepMinutes}
                             {item.dietaryNote ? ` · ${item.dietaryNote}` : ''}
                           </p>
                         </button>
 
                         <div className="flex items-center justify-between gap-2 pt-0.5">
-                          <span className="text-[15px] font-bold text-[#1C1B1B] tabular-nums">
-                            {formatBRL(item.price)}
-                          </span>
+                          <div className="flex items-baseline gap-1.5 flex-wrap">
+                            <span className="text-[15px] font-bold text-[#1C1B1B] tabular-nums">
+                              {formatBRL(item.price)}
+                            </span>
+                            {hasPromo && item.originalPrice != null && (
+                              <span className="text-[12px] text-[#8E7069] line-through tabular-nums">
+                                {formatBRL(item.originalPrice)}
+                              </span>
+                            )}
+                          </div>
 
                           {qtyInBag === 0 ? (
                             <div className="flex items-center gap-1.5">

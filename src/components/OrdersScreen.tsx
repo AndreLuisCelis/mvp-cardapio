@@ -74,7 +74,7 @@ export function OrdersScreen({
   const buyerAddress =
     activeOrder.fulfillment === 'delivery' && activeOrder.buyer.endereco
       ? `${activeOrder.buyer.endereco} · ${activeOrder.neighborhoodLabel}`
-      : `Rua Oscar Freire, 142 · ${activeOrder.neighborhoodLabel}`;
+      : `TOP Lanches · Jardim Rosas · Francisco Morato - SP · ${activeOrder.neighborhoodLabel}`;
 
   return (
     <div className="space-y-8 pb-16">

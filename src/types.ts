@@ -1,4 +1,13 @@
-export type MenuCategory = 'all' | 'burgers' | 'combos' | 'sides' | 'drinks';
+export type MenuCategory =
+  | 'all'
+  | 'combos'
+  | 'combos-casal'
+  | 'combos-grande-fome'
+  | 'combos-individuais'
+  | 'dog-saboroso'
+  | 'hamburguer-sensacional'
+  | 'porcao-de-batata'
+  | 'bebidas';
 
 export type AppScreen = 'menu' | 'combos' | 'hearth' | 'checkout' | 'orders';
 
@@ -26,14 +35,25 @@ export interface CustomizationGroup {
   choices: CustomizationChoice[];
 }
 
+export interface StoreInfo {
+  name: string;
+  neighborhood: string;
+  city: string;
+  minOrder: number;
+  deliveryFee: number;
+  deliveryTimeMin: string;
+}
+
 export interface MenuItem {
   id: string;
   name: string;
-  category: Exclude<MenuCategory, 'all'>;
+  category: Exclude<MenuCategory, 'all' | 'combos'>;
+  categoryLabel: string;
   description: string;
   ingredientsSummary: string;
   price: number;
-  calories: number;
+  originalPrice?: number | null;
+  calories?: number;
   prepMinutes: string;
   rating: number;
   reviewCount: number;
