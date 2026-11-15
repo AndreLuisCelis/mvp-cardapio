@@ -378,16 +378,16 @@ export function MenuScreen({
                   return (
                     <article
                       key={item.id}
-                      className="bg-[#FFFFFF] border border-[#EAEAEA] hover:border-[#D9D9D9] rounded-xl p-3.5 flex items-stretch justify-between gap-3.5 transition-colors"
+                      className="bg-[#FFFFFF] border border-[#EAEAEA] hover:border-[#D9D9D9] rounded-xl p-3.5 flex flex-col justify-between gap-3 transition-colors"
                     >
-                      {/* Left Content */}
-                      <div className="flex-1 min-w-0 flex flex-col justify-between gap-2.5">
+                      {/* Top Row: Info + Thumbnail */}
+                      <div className="flex items-start justify-between gap-3.5">
                         <button
                           type="button"
                           onClick={() => onOpenCustomizer(item)}
-                          className="text-left space-y-1 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D3451B] rounded"
+                          className="flex-1 min-w-0 text-left space-y-1 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#D3451B] rounded"
                         >
-                          <h3 className="text-[16px] font-semibold leading-[1.3] text-[#1C1B1B] truncate">
+                          <h3 className="text-[16px] font-semibold leading-[1.3] text-[#1C1B1B] line-clamp-2">
                             {item.name}
                           </h3>
                           <p className="text-[13px] leading-[1.45] text-[#5A413A] line-clamp-2">
@@ -400,76 +400,77 @@ export function MenuScreen({
                           </p>
                         </button>
 
-                        <div className="flex items-center justify-between gap-2 pt-0.5">
-                          <div className="flex items-baseline gap-1.5 flex-wrap">
-                            <span className="text-[15px] font-bold text-[#1C1B1B] tabular-nums">
-                              {formatBRL(item.price)}
-                            </span>
-                            {hasPromo && item.originalPrice != null && (
-                              <span className="text-[12px] text-[#8E7069] line-through tabular-nums">
-                                {formatBRL(item.originalPrice)}
-                              </span>
-                            )}
-                          </div>
-
-                          {qtyInBag === 0 ? (
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                type="button"
-                                onClick={() => onOpenCustomizer(item)}
-                                className="min-h-[36px] px-3 py-1.5 rounded-full bg-[#F5F5F5] hover:bg-[#EAE7E7] border border-[#EAEAEA] text-[12px] font-semibold text-[#1A1A1A] whitespace-nowrap shrink-0 cursor-pointer transition-colors"
-                              >
-                                Personalizar
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => onQuickAdd(item)}
-                                aria-label={`Adicionar ${item.name}`}
-                                className="min-h-[36px] min-w-[36px] px-3 py-1.5 rounded-full bg-[#D3451B] hover:bg-[#B02D00] text-white text-[12px] font-semibold inline-flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
-                              >
-                                <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
-                                <span>Adicionar</span>
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="inline-flex items-center bg-[#F5F5F5] border border-[#EAEAEA] rounded-full p-0.5">
-                              <button
-                                type="button"
-                                onClick={() => onAdjustItemQuantity(item.id, -1)}
-                                aria-label={`Remover uma unidade de ${item.name}`}
-                                className="w-8 h-8 rounded-full flex items-center justify-center text-[#1A1A1A] hover:bg-[#FFFFFF] transition-colors cursor-pointer"
-                              >
-                                <Minus className="w-3.5 h-3.5" strokeWidth={2.2} />
-                              </button>
-                              <span className="px-2.5 text-[13px] font-bold text-[#1C1B1B] tabular-nums">
-                                {qtyInBag}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => onAdjustItemQuantity(item.id, 1)}
-                                aria-label={`Adicionar mais uma unidade de ${item.name}`}
-                                className="w-8 h-8 rounded-full flex items-center justify-center text-[#D3451B] hover:bg-[#FFFFFF] transition-colors cursor-pointer"
-                              >
-                                <Plus className="w-3.5 h-3.5" strokeWidth={2.4} />
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                        {/* Right Thumbnail */}
+                        <button
+                          type="button"
+                          onClick={() => onOpenCustomizer(item)}
+                          aria-label={`Personalizar ${item.name}`}
+                          className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-lg overflow-hidden bg-[#F6F3F2] border border-[#EAEAEA] cursor-pointer"
+                        >
+                          <ResilientImage
+                            src={item.imageUrl}
+                            alt={item.name}
+                            className="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-200"
+                          />
+                        </button>
                       </div>
 
-                      {/* Right Thumbnail */}
-                      <button
-                        type="button"
-                        onClick={() => onOpenCustomizer(item)}
-                        aria-label={`Personalizar ${item.name}`}
-                        className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-lg overflow-hidden bg-[#F6F3F2] border border-[#EAEAEA] cursor-pointer self-center"
-                      >
-                        <ResilientImage
-                          src={item.imageUrl}
-                          alt={item.name}
-                          className="w-full h-full object-cover hover:scale-[1.03] transition-transform duration-200"
-                        />
-                      </button>
+                      {/* Bottom Row: Full-width Price & Action Buttons */}
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-[#F6F3F2]">
+                        <div className="flex items-baseline gap-1.5 flex-wrap whitespace-nowrap">
+                          <span className="text-[15px] font-bold text-[#1C1B1B] tabular-nums">
+                            {formatBRL(item.price)}
+                          </span>
+                          {hasPromo && item.originalPrice != null && (
+                            <span className="text-[12px] text-[#8E7069] line-through tabular-nums">
+                              {formatBRL(item.originalPrice)}
+                            </span>
+                          )}
+                        </div>
+
+                        {qtyInBag === 0 ? (
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => onOpenCustomizer(item)}
+                              className="min-h-[36px] px-3 py-1.5 rounded-full bg-[#F5F5F5] hover:bg-[#EAE7E7] border border-[#EAEAEA] text-[12px] font-semibold text-[#1A1A1A] whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                            >
+                              Personalizar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => onQuickAdd(item)}
+                              aria-label={`Adicionar ${item.name}`}
+                              className="min-h-[36px] min-w-[36px] px-3 py-1.5 rounded-full bg-[#D3451B] hover:bg-[#B02D00] text-white text-[12px] font-semibold inline-flex items-center gap-1 whitespace-nowrap shrink-0 cursor-pointer transition-colors"
+                            >
+                              <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
+                              <span>Adicionar</span>
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="inline-flex items-center bg-[#F5F5F5] border border-[#EAEAEA] rounded-full p-0.5 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => onAdjustItemQuantity(item.id, -1)}
+                              aria-label={`Remover uma unidade de ${item.name}`}
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-[#1A1A1A] hover:bg-[#FFFFFF] transition-colors cursor-pointer"
+                            >
+                              <Minus className="w-3.5 h-3.5" strokeWidth={2.2} />
+                            </button>
+                            <span className="px-2.5 text-[13px] font-bold text-[#1C1B1B] tabular-nums">
+                              {qtyInBag}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => onAdjustItemQuantity(item.id, 1)}
+                              aria-label={`Adicionar mais uma unidade de ${item.name}`}
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-[#D3451B] hover:bg-[#FFFFFF] transition-colors cursor-pointer"
+                            >
+                              <Plus className="w-3.5 h-3.5" strokeWidth={2.4} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </article>
                   );
                 })}

@@ -1,5 +1,5 @@
 import { Clock, Flame, MapPin } from 'lucide-react';
-import heroSmashImg from '../assets/images/hero_smash_burger_1794688358225.jpg';
+import storeBannerImg from '../assets/images/banner_top_lanches.jpeg';
 import { STORE_INFO } from '../data/menu';
 import { formatBRL } from '../utils/format';
 import { ResilientImage } from './ResilientImage';
@@ -56,7 +56,7 @@ export function HearthScreen({ onExploreMenu }: HearthScreenProps) {
 
         <div className="lg:col-span-6 bg-[#F6F3F2] min-h-[240px]">
           <ResilientImage
-            src={heroSmashImg}
+            src={storeBannerImg}
             alt={`Lanches e combos da ${STORE_INFO.name}`}
             className="w-full h-full object-cover"
           />

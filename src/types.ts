@@ -17,7 +17,12 @@ export type ImageKey =
   | 'spicy_chicken'
   | 'classic_ember'
   | 'rosemary_fries'
-  | 'craft_soda';
+  | 'craft_soda'
+  | 'combo_casal'
+  | 'brazilian_dog'
+  | 'cheddar_fries'
+  | 'soda_cans'
+  | 'fruit_juice';
 
 export type CustomizationGroupKey = 'bun' | 'sear' | 'addons' | 'dip' | 'ice';
 

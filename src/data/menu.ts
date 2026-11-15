@@ -1,9 +1,40 @@
-import heroSmashImg from '../assets/images/hero_smash_burger_1794688358225.jpg';
-import truffleBrisketImg from '../assets/images/burger_truffle_brisket_1794688358439.jpg';
-import spicyChickenImg from '../assets/images/burger_spicy_chicken_1794688359082.jpg';
-import classicEmberImg from '../assets/images/burger_classic_ember_1794688360421.jpg';
-import rosemaryFriesImg from '../assets/images/side_rosemary_fries_1794688360241.jpg';
-import craftSodaImg from '../assets/images/drink_craft_soda_1794688360286.jpg';
+import comboCasalSimplesImg from '../assets/images/combo_casal_simples.jpg';
+import comboCasalSaladaImg from '../assets/images/combo_casal_salada.jpg';
+import comboCasalSaladaBaconImg from '../assets/images/combo_casal_salada_bacon.jpg';
+import comboCasalBaconImg from '../assets/images/combo_casal_bacon.jpg';
+import comboCasalTudoImg from '../assets/images/combo_casal_tudo.jpg';
+import comboIndividualTudoImg from '../assets/images/combo_individual_tudo.jpg';
+import comboIndividualSimplesImg from '../assets/images/combo_individual_simples.jpg';
+import comboIndividualSaladaImg from '../assets/images/combo_individual_salada.jpg';
+import comboIndividualBaconImg from '../assets/images/combo_individual_bacon.jpg';
+import comboIndividualSaladaBaconImg from '../assets/images/combo_individual_salada_bacon.jpg';
+import comboIndividualTudaoImg from '../assets/images/combo_individual_tudao.jpg';
+import comboDogImg from '../assets/images/combo_dog.jpg';
+import comboBurgerIndividualImg from '../assets/images/combo_burger_individual.jpg';
+import dogTradicionalImg from '../assets/images/dog_tradicional.jpg';
+import dogDuploBigImg from '../assets/images/dog_duplo_big.jpg';
+import dogLinguicaImg from '../assets/images/dog_linguica.jpg';
+import xTudoImg from '../assets/images/x_tudo.jpg';
+import hamburguerSimplesImg from '../assets/images/hamburguer_simples.jpg';
+import xTudaoImg from '../assets/images/x_tudao.jpg';
+import hamburguerEspecialImg from '../assets/images/hamburguer_especial.jpg';
+import xEggImg from '../assets/images/x_egg.jpg';
+import xSaladaImg from '../assets/images/x_salada.jpg';
+import xSaladaBaconImg from '../assets/images/x_salada_bacon.jpg';
+import xEggBaconImg from '../assets/images/x_egg_bacon.jpg';
+import xBaconDuploImg from '../assets/images/x_bacon_duplo.jpg';
+import porcaoBatataImg from '../assets/images/porcao_batata.jpg';
+import cocaCola350Img from '../assets/images/coca_cola_350ml.jpeg';
+import fantaLaranja350Img from '../assets/images/fanta_laranja_350ml.png';
+import fantaUva350Img from '../assets/images/fanta_uva_350ml.jpg';
+import guarana350Img from '../assets/images/guarana_350ml.png';
+import delValleMaracujaImg from '../assets/images/del_valle_maracuja.jpg';
+import delValleUvaImg from '../assets/images/del_valle_uva.jpeg';
+import delVallePessegoImg from '../assets/images/del_valle_pessego.png';
+import convencao2lImg from '../assets/images/convencao_2l.jpg';
+import cocaCola600Img from '../assets/images/coca_cola_600ml.jpg';
+import guarana2lImg from '../assets/images/guarana_2l.png';
+import cocaCola2lImg from '../assets/images/coca_cola_2l.jpeg';
 import {
   CustomizationGroup,
   CustomizationGroupKey,
@@ -38,21 +69,28 @@ export const MENU_CATEGORIES: {
 ];
 
 export const IMAGE_MAP: Record<ImageKey, string> = {
-  hero_smash: heroSmashImg,
-  truffle_brisket: truffleBrisketImg,
-  spicy_chicken: spicyChickenImg,
-  classic_ember: classicEmberImg,
-  rosemary_fries: rosemaryFriesImg,
-  craft_soda: craftSodaImg,
+  hero_smash: comboIndividualTudoImg,
+  truffle_brisket: xBaconDuploImg,
+  spicy_chicken: xEggBaconImg,
+  classic_ember: xSaladaImg,
+  rosemary_fries: porcaoBatataImg,
+  craft_soda: cocaCola600Img,
+  combo_casal: comboCasalTudoImg,
+  brazilian_dog: dogTradicionalImg,
+  cheddar_fries: porcaoBatataImg,
+  soda_cans: cocaCola350Img,
+  fruit_juice: delValleMaracujaImg,
 };
 
 export const IMAGE_OPTIONS: { key: ImageKey; label: string }[] = [
+  { key: 'combo_casal', label: 'Combo Completo' },
   { key: 'hero_smash', label: 'Hambúrguer Duplo' },
-  { key: 'truffle_brisket', label: 'Hambúrguer Especial' },
-  { key: 'spicy_chicken', label: 'Lanche Especial' },
-  { key: 'classic_ember', label: 'Lanche Clássico' },
-  { key: 'rosemary_fries', label: 'Porção de Batata' },
-  { key: 'craft_soda', label: 'Bebida Gelada' },
+  { key: 'truffle_brisket', label: 'Hambúrguer Bacon' },
+  { key: 'classic_ember', label: 'Hambúrguer Clássico' },
+  { key: 'brazilian_dog', label: 'Hot Dog Completo' },
+  { key: 'cheddar_fries', label: 'Batata com Cheddar e Bacon' },
+  { key: 'soda_cans', label: 'Refrigerante Gelado' },
+  { key: 'fruit_juice', label: 'Suco de Fruta' },
 ];
 
 export const CUSTOMIZATION_GROUP_MAP: Record<CustomizationGroupKey, CustomizationGroup> = {
@@ -134,6 +172,7 @@ interface RawCatalogItem {
   price: number;
   originalPrice?: number | null;
   imageKey: ImageKey;
+  imageUrl?: string;
   customizationGroupKeys: CustomizationGroupKey[];
   featured?: boolean;
   isHero?: boolean;
@@ -150,7 +189,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: '2 X-Burguer, 300g de batata frita, 12 Nuggets, Coca-Cola 600ml',
     price: 59.9,
     originalPrice: null,
-    imageKey: 'classic_ember',
+    imageKey: 'combo_casal',
+    imageUrl: comboCasalSimplesImg,
     customizationGroupKeys: ['addons', 'dip'],
     dietaryNote: 'Serve 2 pessoas',
   },
@@ -162,7 +202,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: '2 X-Salada, 300g de batata frita, 12 Nuggets, Coca-Cola 600ml',
     price: 64.9,
     originalPrice: null,
-    imageKey: 'classic_ember',
+    imageKey: 'combo_casal',
+    imageUrl: comboCasalSaladaImg,
     customizationGroupKeys: ['addons', 'dip'],
     dietaryNote: 'Serve 2 pessoas',
   },
@@ -174,7 +215,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: '2 X-Salada Bacon, 300g de batata frita, 12 Nuggets, Coca-Cola 600ml',
     price: 69.9,
     originalPrice: null,
-    imageKey: 'truffle_brisket',
+    imageKey: 'combo_casal',
+    imageUrl: comboCasalSaladaBaconImg,
     customizationGroupKeys: ['addons', 'dip'],
     dietaryNote: 'Serve 2 pessoas',
   },
@@ -186,7 +228,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: '2 X-Bacon, 300g de batata frita, 12 Nuggets, Coca-Cola 600ml',
     price: 74.9,
     originalPrice: null,
-    imageKey: 'truffle_brisket',
+    imageKey: 'combo_casal',
+    imageUrl: comboCasalBaconImg,
     customizationGroupKeys: ['addons', 'dip'],
     dietaryNote: 'Serve 2 pessoas',
   },
@@ -198,7 +241,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: '2 X-Tudo, 300g de batata frita, 12 Nuggets, Coca-Cola 600ml',
     price: 79.9,
     originalPrice: null,
-    imageKey: 'hero_smash',
+    imageKey: 'combo_casal',
+    imageUrl: comboCasalTudoImg,
     customizationGroupKeys: ['addons', 'dip'],
     dietaryNote: 'Serve 2 pessoas',
   },
@@ -210,7 +254,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: '2 X-Tudão, 300g de batata frita, 12 Nuggets, Coca-Cola 600ml',
     price: 84.9,
     originalPrice: null,
-    imageKey: 'hero_smash',
+    imageKey: 'combo_casal',
+    imageUrl: comboCasalBaconImg,
     customizationGroupKeys: ['addons', 'dip'],
     dietaryNote: 'Mais completo',
   },
@@ -225,6 +270,7 @@ const RAW_ITEMS: RawCatalogItem[] = [
     price: 38.9,
     originalPrice: 49.9,
     imageKey: 'hero_smash',
+    imageUrl: comboIndividualTudoImg,
     customizationGroupKeys: ['addons', 'dip'],
     featured: true,
     isHero: true,
@@ -239,6 +285,7 @@ const RAW_ITEMS: RawCatalogItem[] = [
     price: 44.9,
     originalPrice: null,
     imageKey: 'classic_ember',
+    imageUrl: comboIndividualSimplesImg,
     customizationGroupKeys: ['addons', 'dip'],
   },
   {
@@ -250,6 +297,7 @@ const RAW_ITEMS: RawCatalogItem[] = [
     price: 44.9,
     originalPrice: null,
     imageKey: 'classic_ember',
+    imageUrl: comboIndividualSaladaImg,
     customizationGroupKeys: ['addons', 'dip'],
   },
   {
@@ -261,6 +309,7 @@ const RAW_ITEMS: RawCatalogItem[] = [
     price: 49.9,
     originalPrice: null,
     imageKey: 'truffle_brisket',
+    imageUrl: comboIndividualBaconImg,
     customizationGroupKeys: ['addons', 'dip'],
   },
   {
@@ -272,6 +321,7 @@ const RAW_ITEMS: RawCatalogItem[] = [
     price: 49.9,
     originalPrice: null,
     imageKey: 'truffle_brisket',
+    imageUrl: comboIndividualSaladaBaconImg,
     customizationGroupKeys: ['addons', 'dip'],
   },
   {
@@ -283,6 +333,7 @@ const RAW_ITEMS: RawCatalogItem[] = [
     price: 54.9,
     originalPrice: null,
     imageKey: 'hero_smash',
+    imageUrl: comboIndividualTudaoImg,
     customizationGroupKeys: ['addons', 'dip'],
   },
 
@@ -295,7 +346,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: '1 Dog Simples, batata frita, 1 bebida em lata',
     price: 27.0,
     originalPrice: 36.0,
-    imageKey: 'spicy_chicken',
+    imageKey: 'brazilian_dog',
+    imageUrl: comboDogImg,
     customizationGroupKeys: ['addons', 'dip'],
     dietaryNote: 'Oferta',
   },
@@ -307,7 +359,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: '1 Dog Bacon, batata frita, 1 bebida em lata',
     price: 30.5,
     originalPrice: 39.5,
-    imageKey: 'spicy_chicken',
+    imageKey: 'brazilian_dog',
+    imageUrl: comboDogImg,
     customizationGroupKeys: ['addons', 'dip'],
     dietaryNote: 'Oferta',
   },
@@ -320,6 +373,7 @@ const RAW_ITEMS: RawCatalogItem[] = [
     price: 31.5,
     originalPrice: 42.5,
     imageKey: 'truffle_brisket',
+    imageUrl: comboBurgerIndividualImg,
     customizationGroupKeys: ['addons', 'dip'],
     dietaryNote: 'Oferta',
   },
@@ -332,6 +386,7 @@ const RAW_ITEMS: RawCatalogItem[] = [
     price: 34.5,
     originalPrice: 45.5,
     imageKey: 'hero_smash',
+    imageUrl: comboBurgerIndividualImg,
     customizationGroupKeys: ['addons', 'dip'],
     dietaryNote: 'Oferta',
   },
@@ -344,6 +399,7 @@ const RAW_ITEMS: RawCatalogItem[] = [
     price: 40.0,
     originalPrice: null,
     imageKey: 'classic_ember',
+    imageUrl: comboBurgerIndividualImg,
     customizationGroupKeys: ['addons', 'dip'],
   },
   {
@@ -354,7 +410,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: '1 Big Dog, batata frita, 1 bebida em lata',
     price: 41.0,
     originalPrice: null,
-    imageKey: 'spicy_chicken',
+    imageKey: 'brazilian_dog',
+    imageUrl: comboDogImg,
     customizationGroupKeys: ['addons', 'dip'],
   },
   {
@@ -366,6 +423,7 @@ const RAW_ITEMS: RawCatalogItem[] = [
     price: 43.5,
     originalPrice: null,
     imageKey: 'hero_smash',
+    imageUrl: comboBurgerIndividualImg,
     customizationGroupKeys: ['addons', 'dip'],
   },
 
@@ -379,7 +437,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
       'Pão de dog, 1 salsicha, maionese, molho de tomate, batata palha, purê de batata, bacon, ovo e molho cheddar',
     price: 12.5,
     originalPrice: 18.5,
-    imageKey: 'spicy_chicken',
+    imageKey: 'brazilian_dog',
+    imageUrl: dogTradicionalImg,
     customizationGroupKeys: ['addons'],
     featured: true,
     dietaryNote: 'Oferta',
@@ -393,7 +452,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
       'Pão de dog, 1 salsicha, maionese, molho de tomate, batata palha e purê de batata',
     price: 13.0,
     originalPrice: null,
-    imageKey: 'spicy_chicken',
+    imageKey: 'brazilian_dog',
+    imageUrl: dogTradicionalImg,
     customizationGroupKeys: ['addons'],
   },
   {
@@ -405,7 +465,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
       'Pão de dog, 1 salsicha, maionese, molho de tomate, batata palha, purê de batata e molho cheddar',
     price: 13.5,
     originalPrice: null,
-    imageKey: 'spicy_chicken',
+    imageKey: 'brazilian_dog',
+    imageUrl: dogTradicionalImg,
     customizationGroupKeys: ['addons'],
   },
   {
@@ -417,7 +478,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
       'Pão de dog, 2 salsichas, maionese, molho de tomate, batata palha, purê de batata e molho cheddar',
     price: 16.0,
     originalPrice: null,
-    imageKey: 'spicy_chicken',
+    imageKey: 'brazilian_dog',
+    imageUrl: dogDuploBigImg,
     customizationGroupKeys: ['addons'],
   },
   {
@@ -429,7 +491,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
       'Pão de dog, 1 salsicha, maionese, molho de tomate, batata palha, purê de batata e bacon',
     price: 16.5,
     originalPrice: null,
-    imageKey: 'spicy_chicken',
+    imageKey: 'brazilian_dog',
+    imageUrl: dogTradicionalImg,
     customizationGroupKeys: ['addons'],
   },
   {
@@ -441,7 +504,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
       'Pão de dog, 1 salsicha, maionese, molho de tomate, batata palha, purê de batata, bacon e molho cheddar',
     price: 17.0,
     originalPrice: null,
-    imageKey: 'spicy_chicken',
+    imageKey: 'brazilian_dog',
+    imageUrl: dogTradicionalImg,
     customizationGroupKeys: ['addons'],
   },
   {
@@ -453,7 +517,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
       'Pão de dog, 2 salsichas, maionese, molho de tomate, batata palha, purê de batata, bacon e molho cheddar',
     price: 18.0,
     originalPrice: null,
-    imageKey: 'spicy_chicken',
+    imageKey: 'brazilian_dog',
+    imageUrl: dogDuploBigImg,
     customizationGroupKeys: ['addons'],
   },
   {
@@ -465,7 +530,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
       'Pão de dog, 1 salsicha, maionese, molho de tomate, batata palha, purê de batata, bacon e ovo',
     price: 18.0,
     originalPrice: null,
-    imageKey: 'spicy_chicken',
+    imageKey: 'brazilian_dog',
+    imageUrl: dogTradicionalImg,
     customizationGroupKeys: ['addons'],
   },
   {
@@ -477,7 +543,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
       'Pão de dog, 1 linguiça toscana, maionese, 2 fatias de queijo, batata palha, purê de batata e molho cheddar',
     price: 19.0,
     originalPrice: null,
-    imageKey: 'spicy_chicken',
+    imageKey: 'brazilian_dog',
+    imageUrl: dogLinguicaImg,
     customizationGroupKeys: ['addons'],
   },
   {
@@ -489,7 +556,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
       'Pão de dog, 1 linguiça toscana, bacon, maionese, 1 fatia de queijo, purê de batata e molho cheddar',
     price: 22.0,
     originalPrice: null,
-    imageKey: 'spicy_chicken',
+    imageKey: 'brazilian_dog',
+    imageUrl: dogLinguicaImg,
     customizationGroupKeys: ['addons'],
   },
 
@@ -504,6 +572,7 @@ const RAW_ITEMS: RawCatalogItem[] = [
     price: 14.5,
     originalPrice: 20.5,
     imageKey: 'hero_smash',
+    imageUrl: xTudoImg,
     customizationGroupKeys: ['bun', 'sear', 'addons'],
     featured: true,
     dietaryNote: 'Oferta',
@@ -517,6 +586,7 @@ const RAW_ITEMS: RawCatalogItem[] = [
     price: 15.5,
     originalPrice: null,
     imageKey: 'classic_ember',
+    imageUrl: hamburguerSimplesImg,
     customizationGroupKeys: ['bun', 'sear', 'addons'],
   },
   {
@@ -529,6 +599,7 @@ const RAW_ITEMS: RawCatalogItem[] = [
     price: 16.5,
     originalPrice: 22.5,
     imageKey: 'hero_smash',
+    imageUrl: xTudaoImg,
     customizationGroupKeys: ['bun', 'sear', 'addons'],
     dietaryNote: 'Oferta',
   },
@@ -542,6 +613,7 @@ const RAW_ITEMS: RawCatalogItem[] = [
     price: 16.5,
     originalPrice: null,
     imageKey: 'classic_ember',
+    imageUrl: hamburguerEspecialImg,
     customizationGroupKeys: ['bun', 'sear', 'addons'],
   },
   {
@@ -553,6 +625,7 @@ const RAW_ITEMS: RawCatalogItem[] = [
     price: 16.5,
     originalPrice: null,
     imageKey: 'classic_ember',
+    imageUrl: xEggImg,
     customizationGroupKeys: ['bun', 'sear', 'addons'],
   },
   {
@@ -565,6 +638,7 @@ const RAW_ITEMS: RawCatalogItem[] = [
     price: 17.0,
     originalPrice: null,
     imageKey: 'classic_ember',
+    imageUrl: xSaladaImg,
     customizationGroupKeys: ['bun', 'sear', 'addons'],
   },
   {
@@ -577,6 +651,7 @@ const RAW_ITEMS: RawCatalogItem[] = [
     price: 17.5,
     originalPrice: null,
     imageKey: 'classic_ember',
+    imageUrl: xSaladaImg,
     customizationGroupKeys: ['bun', 'sear', 'addons'],
   },
   {
@@ -589,6 +664,7 @@ const RAW_ITEMS: RawCatalogItem[] = [
     price: 18.0,
     originalPrice: null,
     imageKey: 'truffle_brisket',
+    imageUrl: xSaladaBaconImg,
     customizationGroupKeys: ['bun', 'sear', 'addons'],
   },
   {
@@ -601,6 +677,7 @@ const RAW_ITEMS: RawCatalogItem[] = [
     price: 18.5,
     originalPrice: null,
     imageKey: 'truffle_brisket',
+    imageUrl: xEggBaconImg,
     customizationGroupKeys: ['bun', 'sear', 'addons'],
   },
   {
@@ -613,6 +690,7 @@ const RAW_ITEMS: RawCatalogItem[] = [
     price: 19.5,
     originalPrice: null,
     imageKey: 'truffle_brisket',
+    imageUrl: xBaconDuploImg,
     customizationGroupKeys: ['bun', 'sear', 'addons'],
   },
 
@@ -625,7 +703,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: 'Batatas palito cobertas com molho cheddar',
     price: 19.0,
     originalPrice: 28.0,
-    imageKey: 'rosemary_fries',
+    imageKey: 'cheddar_fries',
+    imageUrl: porcaoBatataImg,
     customizationGroupKeys: ['dip', 'addons'],
     dietaryNote: 'Oferta',
   },
@@ -637,7 +716,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: 'Batatas palito cobertas com molho cheddar',
     price: 20.0,
     originalPrice: null,
-    imageKey: 'rosemary_fries',
+    imageKey: 'cheddar_fries',
+    imageUrl: porcaoBatataImg,
     customizationGroupKeys: ['dip'],
   },
   {
@@ -648,7 +728,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: 'Batatas palito cobertas com molho cheddar',
     price: 24.0,
     originalPrice: null,
-    imageKey: 'rosemary_fries',
+    imageKey: 'cheddar_fries',
+    imageUrl: porcaoBatataImg,
     customizationGroupKeys: ['dip', 'addons'],
   },
   {
@@ -659,7 +740,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: 'Batatas palito cobertas com molho cheddar e finalizadas com bacon',
     price: 24.0,
     originalPrice: 33.0,
-    imageKey: 'rosemary_fries',
+    imageKey: 'cheddar_fries',
+    imageUrl: porcaoBatataImg,
     customizationGroupKeys: ['dip', 'addons'],
     dietaryNote: 'Oferta',
   },
@@ -673,7 +755,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: 'Lata 350ml',
     price: 8.0,
     originalPrice: null,
-    imageKey: 'craft_soda',
+    imageKey: 'soda_cans',
+    imageUrl: cocaCola350Img,
     customizationGroupKeys: ['ice'],
   },
   {
@@ -684,7 +767,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: 'Lata 350ml',
     price: 8.0,
     originalPrice: null,
-    imageKey: 'craft_soda',
+    imageKey: 'soda_cans',
+    imageUrl: fantaLaranja350Img,
     customizationGroupKeys: ['ice'],
   },
   {
@@ -695,7 +779,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: 'Lata 350ml',
     price: 8.0,
     originalPrice: null,
-    imageKey: 'craft_soda',
+    imageKey: 'soda_cans',
+    imageUrl: fantaUva350Img,
     customizationGroupKeys: ['ice'],
   },
   {
@@ -706,7 +791,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: 'Lata 350ml',
     price: 8.0,
     originalPrice: null,
-    imageKey: 'craft_soda',
+    imageKey: 'soda_cans',
+    imageUrl: guarana350Img,
     customizationGroupKeys: ['ice'],
   },
   {
@@ -717,7 +803,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: 'Lata 290ml',
     price: 9.0,
     originalPrice: null,
-    imageKey: 'craft_soda',
+    imageKey: 'fruit_juice',
+    imageUrl: delValleMaracujaImg,
     customizationGroupKeys: ['ice'],
   },
   {
@@ -728,7 +815,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: 'Lata 290ml',
     price: 9.0,
     originalPrice: null,
-    imageKey: 'craft_soda',
+    imageKey: 'fruit_juice',
+    imageUrl: delValleUvaImg,
     customizationGroupKeys: ['ice'],
   },
   {
@@ -739,7 +827,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: 'Lata 290ml',
     price: 9.0,
     originalPrice: null,
-    imageKey: 'craft_soda',
+    imageKey: 'fruit_juice',
+    imageUrl: delVallePessegoImg,
     customizationGroupKeys: ['ice'],
   },
   {
@@ -750,7 +839,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: 'Garrafa 2 Litros',
     price: 12.0,
     originalPrice: null,
-    imageKey: 'craft_soda',
+    imageKey: 'soda_cans',
+    imageUrl: convencao2lImg,
     customizationGroupKeys: ['ice'],
   },
   {
@@ -761,7 +851,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: 'Garrafa 600ml',
     price: 13.0,
     originalPrice: null,
-    imageKey: 'craft_soda',
+    imageKey: 'soda_cans',
+    imageUrl: cocaCola600Img,
     customizationGroupKeys: ['ice'],
   },
   {
@@ -772,7 +863,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: 'Garrafa 2 Litros',
     price: 20.0,
     originalPrice: null,
-    imageKey: 'craft_soda',
+    imageKey: 'soda_cans',
+    imageUrl: guarana2lImg,
     customizationGroupKeys: ['ice'],
   },
   {
@@ -783,7 +875,8 @@ const RAW_ITEMS: RawCatalogItem[] = [
     description: 'Garrafa 2 Litros',
     price: 25.0,
     originalPrice: null,
-    imageKey: 'craft_soda',
+    imageKey: 'soda_cans',
+    imageUrl: cocaCola2lImg,
     customizationGroupKeys: ['ice'],
   },
 ];
@@ -805,7 +898,7 @@ export const MENU_ITEMS: MenuItem[] = RAW_ITEMS.map((item, idx) => ({
   isHero: Boolean(item.isHero),
   published: true,
   imageKey: item.imageKey,
-  imageUrl: IMAGE_MAP[item.imageKey],
+  imageUrl: item.imageUrl ?? IMAGE_MAP[item.imageKey],
   customizationGroupKeys: item.customizationGroupKeys,
   customizationGroups: resolveCustomizationGroups(item.customizationGroupKeys),
   sortOrder: idx + 1,
