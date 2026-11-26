@@ -2,13 +2,17 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Global Safety Net
+    // Pillar 1: Global Safety Net (Default Deny)
     match /{document=**} {
       allow read, write: if false;
     }
 
+    // Pillar 3: Path & ID Hardening
     function isValidId(id) {
-      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+      return id is string &&
+        id.size() >= 1 &&
+        id.size() <= 128 &&
+        id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
     function incoming() {
@@ -19,14 +23,189 @@ service cloud.firestore {
       return resource.data;
     }
 
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    // Bootstrapped Owner Super Admin (verified email required)
+    function isBootstrapAdmin() {
+      return isVerifiedUser() &&
+        request.auth.token.email == 'andreluiscelis@celisapp.com';
+    }
+
+    function staffRecordExists() {
+      return isVerifiedUser() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function staffRecord() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isActiveStaff() {
+      return isBootstrapAdmin() || (
+        staffRecordExists() &&
+        staffRecord().active == true &&
+        staffRecord().role in ['admin', 'editor']
+      );
+    }
+
+    function canManageUsers() {
+      return isBootstrapAdmin() || (
+        staffRecordExists() &&
+        staffRecord().active == true &&
+        staffRecord().role == 'admin' &&
+        staffRecord().canManageUsers == true
+      );
+    }
+
+    function isSafeMediaUrl(url) {
+      return url is string &&
+        url.size() <= 350000 &&
+        (
+          url.size() == 0 ||
+          url.matches('^https?://.*') ||
+          url.matches('^/.*') ||
+          url.matches('^data:image/(png|jpeg|jpg|webp);base64,[A-Za-z0-9+/=]+$')
+        );
+    }
+
+    // Pillar 2: Validation Blueprints
+    function isValidStoreSettings(data) {
+      return data.keys().hasAll([
+        'name',
+        'neighborhood',
+        'city',
+        'minOrder',
+        'deliveryFee',
+        'deliveryTimeMin',
+        'whatsappNumber',
+        'orderCodePrefix',
+        'pickupEstimatedMinutes',
+        'deliveryEstimatedMinutes',
+        'aboutNavLabel',
+        'heroHeadline',
+        'searchPlaceholder',
+        'emptyBagDescription',
+        'paymentMethodsLabel',
+        'logoUrl',
+        'bannerUrl',
+        'aboutHeadline',
+        'aboutDescription',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'name',
+        'neighborhood',
+        'city',
+        'minOrder',
+        'deliveryFee',
+        'deliveryTimeMin',
+        'whatsappNumber',
+        'orderCodePrefix',
+        'pickupEstimatedMinutes',
+        'deliveryEstimatedMinutes',
+        'aboutNavLabel',
+        'heroHeadline',
+        'searchPlaceholder',
+        'emptyBagDescription',
+        'paymentMethodsLabel',
+        'logoUrl',
+        'bannerUrl',
+        'aboutHeadline',
+        'aboutDescription',
+        'updatedAt'
+      ]) &&
+      data.name is string && data.name.size() >= 2 && data.name.size() <= 80 &&
+      data.neighborhood is string && data.neighborhood.size() >= 2 && data.neighborhood.size() <= 80 &&
+      data.city is string && data.city.size() >= 2 && data.city.size() <= 80 &&
+      data.minOrder is number && data.minOrder >= 0 && data.minOrder <= 10000 &&
+      data.deliveryFee is number && data.deliveryFee >= 0 && data.deliveryFee <= 500 &&
+      data.deliveryTimeMin is string && data.deliveryTimeMin.size() >= 2 && data.deliveryTimeMin.size() <= 30 &&
+      data.whatsappNumber is string && data.whatsappNumber.size() >= 8 && data.whatsappNumber.size() <= 25 && data.whatsappNumber.matches('^[0-9]+$') &&
+      data.orderCodePrefix is string && data.orderCodePrefix.size() >= 1 && data.orderCodePrefix.size() <= 6 && data.orderCodePrefix.matches('^[A-Z0-9]+$') &&
+      data.pickupEstimatedMinutes is number && data.pickupEstimatedMinutes >= 1 && data.pickupEstimatedMinutes <= 240 &&
+      data.deliveryEstimatedMinutes is number && data.deliveryEstimatedMinutes >= 1 && data.deliveryEstimatedMinutes <= 240 &&
+      data.aboutNavLabel is string && data.aboutNavLabel.size() >= 2 && data.aboutNavLabel.size() <= 40 &&
+      data.heroHeadline is string && data.heroHeadline.size() >= 4 && data.heroHeadline.size() <= 160 &&
+      data.searchPlaceholder is string && data.searchPlaceholder.size() >= 4 && data.searchPlaceholder.size() <= 140 &&
+      data.emptyBagDescription is string && data.emptyBagDescription.size() >= 4 && data.emptyBagDescription.size() <= 300 &&
+      data.paymentMethodsLabel is string && data.paymentMethodsLabel.size() >= 4 && data.paymentMethodsLabel.size() <= 200 &&
+      isSafeMediaUrl(data.logoUrl) &&
+      isSafeMediaUrl(data.bannerUrl) &&
+      data.aboutHeadline is string && data.aboutHeadline.size() >= 4 && data.aboutHeadline.size() <= 180 &&
+      data.aboutDescription is string && data.aboutDescription.size() >= 4 && data.aboutDescription.size() <= 600 &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidCategory(data) {
+      return data.keys().hasAll([
+        'key',
+        'title',
+        'isCombo',
+        'active',
+        'sortOrder',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'key',
+        'title',
+        'isCombo',
+        'active',
+        'sortOrder',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.key is string && data.key.size() >= 2 && data.key.size() <= 64 && data.key.matches('^[a-z0-9\\-]+$') &&
+      data.title is string && data.title.size() >= 2 && data.title.size() <= 60 &&
+      data.isCombo is bool &&
+      data.active is bool &&
+      data.sortOrder is number && data.sortOrder >= 0 && data.sortOrder <= 1000 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidDeliveryFee(data) {
+      return data.keys().hasAll([
+        'label',
+        'fee',
+        'fulfillment',
+        'active',
+        'sortOrder',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'label',
+        'fee',
+        'fulfillment',
+        'active',
+        'sortOrder',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.label is string && data.label.size() >= 2 && data.label.size() <= 100 &&
+      data.fee is number && data.fee >= 0 && data.fee <= 500 &&
+      data.fulfillment in ['delivery', 'pickup'] &&
+      data.active is bool &&
+      data.sortOrder is number && data.sortOrder >= 0 && data.sortOrder <= 1000 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
     function isValidMenuItem(data) {
       return data.keys().hasAll([
         'name',
         'category',
+        'categoryLabel',
         'description',
         'ingredientsSummary',
         'price',
-        'calories',
         'prepMinutes',
         'rating',
         'reviewCount',
@@ -34,6 +213,7 @@ service cloud.firestore {
         'isHero',
         'published',
         'imageKey',
+        'imageUrl',
         'customizationGroupKeys',
         'sortOrder',
         'createdAt',
@@ -42,10 +222,11 @@ service cloud.firestore {
       data.keys().hasOnly([
         'name',
         'category',
+        'categoryLabel',
         'description',
         'ingredientsSummary',
         'price',
-        'calories',
+        'originalPrice',
         'prepMinutes',
         'rating',
         'reviewCount',
@@ -54,29 +235,66 @@ service cloud.firestore {
         'isHero',
         'published',
         'imageKey',
+        'imageUrl',
         'customizationGroupKeys',
         'sortOrder',
         'createdAt',
         'updatedAt'
       ]) &&
       data.name is string && data.name.size() >= 2 && data.name.size() <= 100 &&
-      data.category in ['burgers', 'combos', 'sides', 'drinks'] &&
-      data.description is string && data.description.size() >= 5 && data.description.size() <= 500 &&
-      data.ingredientsSummary is string && data.ingredientsSummary.size() >= 3 && data.ingredientsSummary.size() <= 200 &&
+      data.category is string && data.category.size() >= 2 && data.category.size() <= 64 && data.category.matches('^[a-z0-9\\-]+$') &&
+      data.categoryLabel is string && data.categoryLabel.size() >= 2 && data.categoryLabel.size() <= 60 &&
+      data.description is string && data.description.size() <= 500 &&
+      data.ingredientsSummary is string && data.ingredientsSummary.size() <= 200 &&
       data.price is number && data.price > 0 && data.price <= 10000 &&
-      data.calories is number && data.calories >= 0 && data.calories <= 10000 &&
-      data.prepMinutes is string && data.prepMinutes.size() >= 3 && data.prepMinutes.size() <= 24 &&
+      (!('originalPrice' in data) || (data.originalPrice is number && data.originalPrice >= 0 && data.originalPrice <= 10000)) &&
+      data.prepMinutes is string && data.prepMinutes.size() >= 1 && data.prepMinutes.size() <= 30 &&
       data.rating is number && data.rating >= 0 && data.rating <= 5 &&
       data.reviewCount is number && data.reviewCount >= 0 && data.reviewCount <= 1000000 &&
       (!('dietaryNote' in data) || (data.dietaryNote is string && data.dietaryNote.size() <= 60)) &&
       data.featured is bool &&
       data.isHero is bool &&
       data.published is bool &&
-      data.imageKey in ['hero_smash', 'truffle_brisket', 'spicy_chicken', 'classic_ember', 'rosemary_fries', 'craft_soda'] &&
+      data.imageKey is string && data.imageKey.size() >= 1 && data.imageKey.size() <= 60 &&
+      isSafeMediaUrl(data.imageUrl) &&
       data.customizationGroupKeys is list &&
       data.customizationGroupKeys.size() <= 5 &&
       data.customizationGroupKeys.hasOnly(['bun', 'sear', 'addons', 'dip', 'ice']) &&
       data.sortOrder is number && data.sortOrder >= 0 && data.sortOrder <= 10000 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidStaffUser(data) {
+      return data.keys().hasAll([
+        'uid',
+        'email',
+        'displayName',
+        'role',
+        'canManageUsers',
+        'active',
+        'createdBy',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'uid',
+        'email',
+        'displayName',
+        'role',
+        'canManageUsers',
+        'active',
+        'createdBy',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      isValidId(data.uid) &&
+      data.email is string && data.email.size() >= 3 && data.email.size() <= 160 &&
+      data.displayName is string && data.displayName.size() >= 2 && data.displayName.size() <= 80 &&
+      data.role in ['admin', 'editor'] &&
+      data.canManageUsers is bool &&
+      data.active is bool &&
+      isValidId(data.createdBy) &&
       data.createdAt is timestamp &&
       data.updatedAt is timestamp;
     }
@@ -143,25 +361,117 @@ service cloud.firestore {
       data.lineTotal is number && data.lineTotal > 0 && data.lineTotal <= 50000;
     }
 
-    // Menu Catalog (no PII)
+    // Store Settings (Public storefront branding & config, Admin/Editor write)
+    match /store_settings/{settingId} {
+      allow get: if isValidId(settingId) && settingId == 'main';
+      allow list: if false;
+      allow create: if isValidId(settingId) &&
+        settingId == 'main' &&
+        isActiveStaff() &&
+        isValidStoreSettings(incoming()) &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(settingId) &&
+        settingId == 'main' &&
+        isActiveStaff() &&
+        isValidStoreSettings(incoming()) &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'name',
+          'neighborhood',
+          'city',
+          'minOrder',
+          'deliveryFee',
+          'deliveryTimeMin',
+          'whatsappNumber',
+          'orderCodePrefix',
+          'pickupEstimatedMinutes',
+          'deliveryEstimatedMinutes',
+          'aboutNavLabel',
+          'heroHeadline',
+          'searchPlaceholder',
+          'emptyBagDescription',
+          'paymentMethodsLabel',
+          'logoUrl',
+          'bannerUrl',
+          'aboutHeadline',
+          'aboutDescription',
+          'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+
+    // Categories (Public active categories, Staff full CRUD)
+    match /categories/{categoryId} {
+      allow get: if isValidId(categoryId) && (existing().active == true || isActiveStaff());
+      allow list: if existing().active == true || isActiveStaff();
+      allow create: if isValidId(categoryId) &&
+        isActiveStaff() &&
+        isValidCategory(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(categoryId) &&
+        isActiveStaff() &&
+        isValidCategory(incoming()) &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'key',
+          'title',
+          'isCombo',
+          'active',
+          'sortOrder',
+          'updatedAt'
+        ]);
+      allow delete: if isValidId(categoryId) && isActiveStaff();
+    }
+
+    // Delivery Fees (Public active options, Staff full CRUD)
+    match /delivery_fees/{feeId} {
+      allow get: if isValidId(feeId) && (existing().active == true || isActiveStaff());
+      allow list: if existing().active == true || isActiveStaff();
+      allow create: if isValidId(feeId) &&
+        isActiveStaff() &&
+        isValidDeliveryFee(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidId(feeId) &&
+        isActiveStaff() &&
+        isValidDeliveryFee(incoming()) &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'label',
+          'fee',
+          'fulfillment',
+          'active',
+          'sortOrder',
+          'updatedAt'
+        ]);
+      allow delete: if isValidId(feeId) && isActiveStaff();
+    }
+
+    // Menu Catalog (Public published items, Staff full CRUD)
     match /menu_items/{itemId} {
-      allow get: if isValidId(itemId);
-      allow list: if existing().published is bool;
+      allow get: if isValidId(itemId) && (existing().published == true || isActiveStaff());
+      allow list: if existing().published == true || isActiveStaff();
       allow create: if isValidId(itemId) &&
+        isActiveStaff() &&
         isValidMenuItem(incoming()) &&
         incoming().createdAt == request.time &&
         incoming().updatedAt == request.time;
       allow update: if isValidId(itemId) &&
+        isActiveStaff() &&
         isValidMenuItem(incoming()) &&
         incoming().createdAt == existing().createdAt &&
         incoming().updatedAt == request.time &&
         incoming().diff(existing()).affectedKeys().hasOnly([
           'name',
           'category',
+          'categoryLabel',
           'description',
           'ingredientsSummary',
           'price',
-          'calories',
+          'originalPrice',
           'prepMinutes',
           'rating',
           'reviewCount',
@@ -170,11 +480,61 @@ service cloud.firestore {
           'isHero',
           'published',
           'imageKey',
+          'imageUrl',
           'customizationGroupKeys',
           'sortOrder',
           'updatedAt'
         ]);
-      allow delete: if isValidId(itemId);
+      allow delete: if isValidId(itemId) && isActiveStaff();
+    }
+
+    // Staff RBAC Users (Strictly isolated PII, only owner/authorized managers)
+    match /users/{userId} {
+      allow get: if isValidId(userId) &&
+        isVerifiedUser() &&
+        (request.auth.uid == userId || canManageUsers());
+      allow list: if canManageUsers();
+      allow create: if isValidId(userId) &&
+        isVerifiedUser() &&
+        isValidStaffUser(incoming()) &&
+        incoming().uid == userId &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        (
+          (
+            isBootstrapAdmin() &&
+            userId == request.auth.uid &&
+            incoming().role == 'admin' &&
+            incoming().canManageUsers == true &&
+            incoming().active == true &&
+            incoming().createdBy == request.auth.uid
+          ) ||
+          (
+            canManageUsers() &&
+            incoming().createdBy == request.auth.uid &&
+            (isBootstrapAdmin() || (incoming().role == 'editor' && incoming().canManageUsers == false))
+          )
+        );
+      allow update: if isValidId(userId) &&
+        canManageUsers() &&
+        isValidStaffUser(incoming()) &&
+        existing().email != 'andreluiscelis@celisapp.com' &&
+        incoming().uid == existing().uid &&
+        incoming().email == existing().email &&
+        incoming().createdBy == existing().createdBy &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (isBootstrapAdmin() || (incoming().role == existing().role && incoming().canManageUsers == existing().canManageUsers)) &&
+        incoming().diff(existing()).affectedKeys().hasOnly([
+          'displayName',
+          'role',
+          'canManageUsers',
+          'active',
+          'updatedAt'
+        ]);
+      allow delete: if isValidId(userId) &&
+        canManageUsers() &&
+        existing().email != 'andreluiscelis@celisapp.com';
     }
 
     // Orders (Zero PII; buyer name/whatsapp/address/neighborhood stay exclusively in localStorage)
@@ -190,8 +550,7 @@ service cloud.firestore {
         isValidOrder(incoming()) &&
         incoming().createdAt == existing().createdAt &&
         incoming().updatedAt == request.time &&
-        existing().stage < 3 &&
-        incoming().stage == existing().stage + 1 &&
+        (isActiveStaff() || (existing().stage < 3 && incoming().stage == existing().stage + 1)) &&
         incoming().diff(existing()).affectedKeys().hasOnly(['stage', 'updatedAt']);
       allow delete: if false;
 

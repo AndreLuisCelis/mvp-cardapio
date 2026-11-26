@@ -1,8 +1,234 @@
 {
   "entities": {
+    "StoreSettings": {
+      "title": "StoreSettings",
+      "description": "Configurações gerais da loja, marca, logo, banner e textos da vitrine.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80,
+          "description": "Nome do estabelecimento."
+        },
+        "neighborhood": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80,
+          "description": "Bairro principal da loja."
+        },
+        "city": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80,
+          "description": "Cidade e estado."
+        },
+        "minOrder": {
+          "type": "number",
+          "description": "Valor mínimo do pedido para entrega em BRL."
+        },
+        "deliveryFee": {
+          "type": "number",
+          "description": "Taxa padrão de entrega em BRL."
+        },
+        "deliveryTimeMin": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 30,
+          "description": "Tempo estimado de entrega (ex: 20-30)."
+        },
+        "whatsappNumber": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 25,
+          "pattern": "^[0-9]+$",
+          "description": "Número WhatsApp da loja com DDI e DDD (apenas dígitos)."
+        },
+        "orderCodePrefix": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 6,
+          "pattern": "^[A-Z0-9]+$",
+          "description": "Prefixo do código de pedidos."
+        },
+        "pickupEstimatedMinutes": {
+          "type": "number",
+          "description": "Tempo estimado para retirada em minutos."
+        },
+        "deliveryEstimatedMinutes": {
+          "type": "number",
+          "description": "Tempo estimado para entrega em minutos."
+        },
+        "aboutNavLabel": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 40,
+          "description": "Rótulo da aba Institucional/Sobre."
+        },
+        "heroHeadline": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 160,
+          "description": "Título principal do destaque na home."
+        },
+        "searchPlaceholder": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 140,
+          "description": "Placeholder do campo de busca do cardápio."
+        },
+        "emptyBagDescription": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 300,
+          "description": "Mensagem exibida quando a sacola está vazia."
+        },
+        "paymentMethodsLabel": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 200,
+          "description": "Texto informativo de formas de pagamento."
+        },
+        "logoUrl": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 350000,
+          "description": "URL ou imagem base64 otimizada da logo do estabelecimento."
+        },
+        "bannerUrl": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 350000,
+          "description": "URL ou imagem base64 otimizada do banner da página Sobre."
+        },
+        "aboutHeadline": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 180,
+          "description": "Título principal da seção Sobre."
+        },
+        "aboutDescription": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 600,
+          "description": "Descrição institucional da lanchonete."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Data da última atualização no servidor."
+        }
+      },
+      "required": [
+        "name",
+        "neighborhood",
+        "city",
+        "minOrder",
+        "deliveryFee",
+        "deliveryTimeMin",
+        "whatsappNumber",
+        "orderCodePrefix",
+        "pickupEstimatedMinutes",
+        "deliveryEstimatedMinutes",
+        "aboutNavLabel",
+        "heroHeadline",
+        "searchPlaceholder",
+        "emptyBagDescription",
+        "paymentMethodsLabel",
+        "logoUrl",
+        "bannerUrl",
+        "aboutHeadline",
+        "aboutDescription",
+        "updatedAt"
+      ]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Categoria dinâmica do cardápio.",
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9\\-]+$",
+          "description": "Slug identificador da categoria."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 60,
+          "description": "Título exibido no cardápio."
+        },
+        "isCombo": {
+          "type": "boolean",
+          "description": "Indica se a categoria pertence à aba de Combos."
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Define se a categoria está ativa no cardápio público."
+        },
+        "sortOrder": {
+          "type": "number",
+          "description": "Ordem de exibição da categoria."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Data de criação no servidor."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Data da última atualização no servidor."
+        }
+      },
+      "required": ["key", "title", "isCombo", "active", "sortOrder", "createdAt", "updatedAt"]
+    },
+    "DeliveryFee": {
+      "title": "DeliveryFee",
+      "description": "Opção de taxa de entrega por bairro/região ou retirada.",
+      "type": "object",
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100,
+          "description": "Descrição do bairro ou modalidade."
+        },
+        "fee": {
+          "type": "number",
+          "description": "Valor da taxa em BRL."
+        },
+        "fulfillment": {
+          "type": "string",
+          "enum": ["delivery", "pickup"],
+          "description": "Tipo de atendimento (entrega ou retirada)."
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Define se a taxa está habilitada no checkout."
+        },
+        "sortOrder": {
+          "type": "number",
+          "description": "Ordem de exibição."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Data de criação no servidor."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Data da última atualização no servidor."
+        }
+      },
+      "required": ["label", "fee", "fulfillment", "active", "sortOrder", "createdAt", "updatedAt"]
+    },
     "MenuItem": {
       "title": "MenuItem",
-      "description": "Item do cardápio da hamburgueria Artisanal Ember.",
+      "description": "Item do cardápio digital.",
       "type": "object",
       "properties": {
         "name": {
@@ -13,33 +239,41 @@
         },
         "category": {
           "type": "string",
-          "enum": ["burgers", "combos", "sides", "drinks"],
-          "description": "Categoria do item no cardápio."
+          "minLength": 2,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9\\-]+$",
+          "description": "Slug da categoria do item no cardápio."
+        },
+        "categoryLabel": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 60,
+          "description": "Nome legível da categoria."
         },
         "description": {
           "type": "string",
-          "minLength": 5,
+          "minLength": 0,
           "maxLength": 500,
-          "description": "Descrição completa do prato."
+          "description": "Descrição completa do item."
         },
         "ingredientsSummary": {
           "type": "string",
-          "minLength": 3,
+          "minLength": 0,
           "maxLength": 200,
-          "description": "Resumo curto de ingredientes separado por pontos."
+          "description": "Resumo curto de ingredientes."
         },
         "price": {
           "type": "number",
-          "description": "Preço unitário em reais (BRL)."
+          "description": "Preço unitário atual em BRL."
         },
-        "calories": {
+        "originalPrice": {
           "type": "number",
-          "description": "Valor energético aproximado em kcal."
+          "description": "Preço original antes da promoção (0 ou ausente se não houver)."
         },
         "prepMinutes": {
           "type": "string",
-          "minLength": 3,
-          "maxLength": 24,
+          "minLength": 1,
+          "maxLength": 30,
           "description": "Tempo estimado de preparo."
         },
         "rating": {
@@ -53,11 +287,11 @@
         "dietaryNote": {
           "type": "string",
           "maxLength": 60,
-          "description": "Nota curta opcional (ex: Vegetariano, Assinatura da casa)."
+          "description": "Etiqueta curta opcional (ex: Oferta, Promoção)."
         },
         "featured": {
           "type": "boolean",
-          "description": "Indica se o item aparece em Destaques do Chef."
+          "description": "Indica se o item aparece em Ofertas em Destaque."
         },
         "isHero": {
           "type": "boolean",
@@ -69,15 +303,15 @@
         },
         "imageKey": {
           "type": "string",
-          "enum": [
-            "hero_smash",
-            "truffle_brisket",
-            "spicy_chicken",
-            "classic_ember",
-            "rosemary_fries",
-            "craft_soda"
-          ],
-          "description": "Chave da fotografia culinária associada ao item."
+          "minLength": 1,
+          "maxLength": 60,
+          "description": "Chave de fallback da imagem associada."
+        },
+        "imageUrl": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 350000,
+          "description": "URL, caminho local ou imagem base64 otimizada do item."
         },
         "customizationGroupKeys": {
           "type": "array",
@@ -101,10 +335,10 @@
       "required": [
         "name",
         "category",
+        "categoryLabel",
         "description",
         "ingredientsSummary",
         "price",
-        "calories",
         "prepMinutes",
         "rating",
         "reviewCount",
@@ -112,8 +346,75 @@
         "isHero",
         "published",
         "imageKey",
+        "imageUrl",
         "customizationGroupKeys",
         "sortOrder",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "StaffUser": {
+      "title": "StaffUser",
+      "description": "Usuário autorizado a operar o painel administrativo e seu nível de permissão.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "UID do usuário no Firebase Authentication."
+        },
+        "email": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 160,
+          "description": "E-mail de login do usuário."
+        },
+        "displayName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 80,
+          "description": "Nome de exibição no painel."
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "editor"],
+          "description": "Papel do usuário no painel."
+        },
+        "canManageUsers": {
+          "type": "boolean",
+          "description": "Permite adicionar, editar e gerenciar outros usuários."
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Define se o acesso ao painel está ativo."
+        },
+        "createdBy": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "UID do administrador que criou o usuário."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Data de criação no servidor."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Data da última atualização no servidor."
+        }
+      },
+      "required": [
+        "uid",
+        "email",
+        "displayName",
+        "role",
+        "canManageUsers",
+        "active",
+        "createdBy",
         "createdAt",
         "updatedAt"
       ]
@@ -128,7 +429,7 @@
           "minLength": 4,
           "maxLength": 20,
           "pattern": "^[A-Z0-9\\-]+$",
-          "description": "Código legível do pedido (ex: EB-1043)."
+          "description": "Código legível do pedido."
         },
         "fulfillment": {
           "type": "string",
@@ -159,7 +460,7 @@
         },
         "stage": {
           "type": "number",
-          "description": "Etapa da cozinha: 0 confirmado, 1 grelha, 2 montagem, 3 pronto."
+          "description": "Etapa da cozinha: 0 confirmado, 1 na chapa, 2 montagem, 3 pronto."
         },
         "estimatedReady": {
           "type": "string",
@@ -228,13 +529,29 @@
     }
   },
   "firestore": {
+    "/store_settings/{settingId}": {
+      "schema": { "$ref": "#/entities/StoreSettings" },
+      "description": "Configurações globais da loja, logo, banner e textos públicos."
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Categorias dinâmicas do cardápio."
+    },
+    "/delivery_fees/{feeId}": {
+      "schema": { "$ref": "#/entities/DeliveryFee" },
+      "description": "Taxas de entrega por bairro e retirada no balcão."
+    },
     "/menu_items/{itemId}": {
       "schema": { "$ref": "#/entities/MenuItem" },
-      "description": "Catálogo persistente do cardápio da hamburgueria."
+      "description": "Catálogo persistente de itens do cardápio."
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/StaffUser" },
+      "description": "Usuários administrativos e permissões RBAC (canManageUsers)."
     },
     "/orders/{orderId}": {
       "schema": { "$ref": "#/entities/Order" },
-      "description": "Comandas de pedido sem PII (acesso apenas por ID direto salvo no localStorage)."
+      "description": "Comandas de pedido sem PII."
     },
     "/orders/{orderId}/items/{itemId}": {
       "schema": { "$ref": "#/entities/OrderItem" },

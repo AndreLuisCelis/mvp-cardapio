@@ -1,6 +1,5 @@
 import { ShoppingBag } from 'lucide-react';
-import { STORE_INFO } from '../config/store';
-import { AppScreen } from '../types';
+import { AppScreen, StoreSettingsRecord } from '../types';
 import { formatBRL } from '../utils/format';
 
 interface TopNavProps {
@@ -9,6 +8,7 @@ interface TopNavProps {
   bagCount: number;
   bagTotal: number;
   activeOrdersCount: number;
+  storeSettings: StoreSettingsRecord;
 }
 
 export function TopNav({
@@ -17,11 +17,12 @@ export function TopNav({
   bagCount,
   bagTotal,
   activeOrdersCount,
+  storeSettings,
 }: TopNavProps) {
   const navItems: { id: AppScreen; label: string }[] = [
     { id: 'menu', label: 'Cardápio' },
     { id: 'combos', label: 'Combos' },
-    { id: 'hearth', label: STORE_INFO.aboutNavLabel },
+    { id: 'hearth', label: storeSettings.aboutNavLabel },
     {
       id: 'orders',
       label: activeOrdersCount > 0 ? `Pedidos (${activeOrdersCount})` : 'Pedidos',
@@ -31,13 +32,20 @@ export function TopNav({
   return (
     <header className="w-full bg-[#FFFFFF] border-b border-[#EAEAEA] md:sticky md:top-0 md:z-30">
       <div className="max-w-[980px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4 sm:gap-8">
-        {/* Zone 1: Single text element wordmark */}
+        {/* Zone 1: Brand logo (optional) + wordmark */}
         <button
           type="button"
           onClick={() => onNavigate('menu')}
-          className="text-lg sm:text-xl font-extrabold tracking-[-0.03em] text-[#1C1B1B] whitespace-nowrap shrink-0 cursor-pointer hover:text-brand transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand rounded"
+          className="inline-flex items-center gap-2.5 text-lg sm:text-xl font-extrabold tracking-[-0.03em] text-[#1C1B1B] whitespace-nowrap shrink-0 cursor-pointer hover:text-brand transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand rounded"
         >
-          {STORE_INFO.name}
+          {storeSettings.logoUrl && (
+            <img
+              src={storeSettings.logoUrl}
+              alt={`Logo ${storeSettings.name}`}
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg object-cover border border-[#EAEAEA] bg-[#F6F3F2]"
+            />
+          )}
+          <span>{storeSettings.name}</span>
         </button>
 
         {/* Zone 2: Clean single-line navigation links */}

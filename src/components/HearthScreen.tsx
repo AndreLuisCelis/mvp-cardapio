@@ -1,26 +1,31 @@
 import { Clock, Flame, MapPin } from 'lucide-react';
-import { ABOUT_SECTION, STORE_INFO } from '../config/store';
+import { ABOUT_SECTION } from '../config/store';
+import { resolveStoreBannerUrl } from '../shared/storeRepository';
+import { StoreSettingsRecord } from '../types';
 import { formatBRL } from '../utils/format';
 import { ResilientImage } from './ResilientImage';
 
 interface HearthScreenProps {
+  storeSettings: StoreSettingsRecord;
   onExploreMenu: () => void;
 }
 
-export function HearthScreen({ onExploreMenu }: HearthScreenProps) {
+export function HearthScreen({ storeSettings, onExploreMenu }: HearthScreenProps) {
+  const bannerSrc = resolveStoreBannerUrl(storeSettings.bannerUrl);
+
   return (
     <div className="space-y-8 pb-16">
       <div className="bg-[#FFFFFF] border border-[#EAEAEA] rounded-xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 lg:items-stretch">
         <div className="lg:col-span-6 p-6 sm:p-8 flex flex-col justify-between gap-6">
           <div className="space-y-3">
             <p className="text-[13px] font-semibold text-brand">
-              {STORE_INFO.name} · {STORE_INFO.neighborhood}
+              {storeSettings.name} · {storeSettings.neighborhood}
             </p>
             <h1 className="text-[28px] sm:text-[36px] font-extrabold leading-[1.15] tracking-[-0.03em] text-[#1C1B1B] text-balance">
-              {ABOUT_SECTION.headline}
+              {storeSettings.aboutHeadline || ABOUT_SECTION.headline}
             </h1>
             <p className="text-[15px] leading-[1.6] text-[#5A413A]">
-              {ABOUT_SECTION.description}
+              {storeSettings.aboutDescription || ABOUT_SECTION.description}
             </p>
           </div>
 
@@ -37,8 +42,8 @@ export function HearthScreen({ onExploreMenu }: HearthScreenProps) {
 
         <div className="lg:col-span-6 bg-[#F6F3F2] min-h-[240px]">
           <ResilientImage
-            src={STORE_INFO.bannerImg}
-            alt={`Lanches e combos da ${STORE_INFO.name}`}
+            src={bannerSrc}
+            alt={`Lanches e combos da ${storeSettings.name}`}
             className="w-full h-full object-cover"
           />
         </div>
@@ -69,7 +74,7 @@ export function HearthScreen({ onExploreMenu }: HearthScreenProps) {
           <div className="space-y-1">
             <h3 className="text-[15px] font-bold text-[#1C1B1B]">Localização</h3>
             <p className="text-[14px] text-[#5A413A]">
-              {STORE_INFO.neighborhood} · {STORE_INFO.city}
+              {storeSettings.neighborhood} · {storeSettings.city}
               <br />
               Retirada no balcão e delivery
             </p>
@@ -81,9 +86,9 @@ export function HearthScreen({ onExploreMenu }: HearthScreenProps) {
           <div className="space-y-1">
             <h3 className="text-[15px] font-bold text-[#1C1B1B]">Tempo de Entrega</h3>
             <p className="text-[14px] text-[#5A413A] tabular-nums">
-              Média de {STORE_INFO.deliveryTimeMin} minutos
+              Média de {storeSettings.deliveryTimeMin} minutos
               <br />
-              Taxa fixa: {formatBRL(STORE_INFO.deliveryFee)}
+              Taxa fixa: {formatBRL(storeSettings.deliveryFee)}
             </p>
           </div>
         </div>
@@ -93,9 +98,9 @@ export function HearthScreen({ onExploreMenu }: HearthScreenProps) {
           <div className="space-y-1">
             <h3 className="text-[15px] font-bold text-[#1C1B1B]">Pedido Mínimo</h3>
             <p className="text-[14px] text-[#5A413A] tabular-nums">
-              A partir de {formatBRL(STORE_INFO.minOrder)} para entrega.
+              A partir de {formatBRL(storeSettings.minOrder)} para entrega.
               <br />
-              {STORE_INFO.paymentMethodsLabel}
+              {storeSettings.paymentMethodsLabel}
             </p>
           </div>
         </div>

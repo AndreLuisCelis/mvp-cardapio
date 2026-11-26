@@ -1,13 +1,4 @@
-export type MenuCategory =
-  | 'all'
-  | 'combos'
-  | 'combos-casal'
-  | 'combos-grande-fome'
-  | 'combos-individuais'
-  | 'dog-saboroso'
-  | 'hamburguer-sensacional'
-  | 'porcao-de-batata'
-  | 'bebidas';
+export type MenuCategory = 'all' | 'combos' | string;
 
 export type AppScreen = 'menu' | 'combos' | 'hearth' | 'checkout' | 'orders';
 
@@ -49,10 +40,62 @@ export interface StoreInfo {
   deliveryTimeMin: string;
 }
 
+export interface StoreSettingsRecord {
+  name: string;
+  neighborhood: string;
+  city: string;
+  minOrder: number;
+  deliveryFee: number;
+  deliveryTimeMin: string;
+  whatsappNumber: string;
+  orderCodePrefix: string;
+  pickupEstimatedMinutes: number;
+  deliveryEstimatedMinutes: number;
+  aboutNavLabel: string;
+  heroHeadline: string;
+  searchPlaceholder: string;
+  emptyBagDescription: string;
+  paymentMethodsLabel: string;
+  logoUrl: string;
+  bannerUrl: string;
+  aboutHeadline: string;
+  aboutDescription: string;
+}
+
+export interface StoreCategoryConfig {
+  id: string;
+  key: string;
+  title: string;
+  isCombo: boolean;
+  active: boolean;
+  sortOrder: number;
+}
+
+export interface DeliveryFeeOption {
+  id: string;
+  label: string;
+  fee: number;
+  fulfillment: FulfillmentType;
+  active: boolean;
+  sortOrder: number;
+}
+
+export type StaffUserRole = 'admin' | 'editor';
+
+export interface StaffUserRecord {
+  uid: string;
+  email: string;
+  displayName: string;
+  role: StaffUserRole;
+  canManageUsers: boolean;
+  active: boolean;
+  createdBy: string;
+}
+
 export interface MenuItem {
   id: string;
   name: string;
-  category: Exclude<MenuCategory, 'all' | 'combos'>;
+  category: string;
   categoryLabel: string;
   description: string;
   ingredientsSummary: string;

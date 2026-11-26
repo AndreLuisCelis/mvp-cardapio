@@ -1,12 +1,19 @@
 import { useMemo, useState } from 'react';
 import { Minus, Plus, Search, Star, X } from 'lucide-react';
-import { MENU_CATEGORIES, STORE_INFO } from '../data/menu';
-import { CartItem, MenuCategory, MenuItem } from '../types';
+import {
+  CartItem,
+  MenuCategory,
+  MenuItem,
+  StoreCategoryConfig,
+  StoreSettingsRecord,
+} from '../types';
 import { formatBRL } from '../utils/format';
 import { ResilientImage } from './ResilientImage';
 
 interface MenuScreenProps {
   items: MenuItem[];
+  categories: StoreCategoryConfig[];
+  storeSettings: StoreSettingsRecord;
   initialCategory?: MenuCategory;
   cartItems: CartItem[];
   onOpenCustomizer: (item: MenuItem) => void;
@@ -14,14 +21,10 @@ interface MenuScreenProps {
   onAdjustItemQuantity: (menuItemId: string, delta: number) => void;
 }
 
-const COMBO_CATEGORY_KEYS: Exclude<MenuCategory, 'all' | 'combos'>[] = [
-  'combos-casal',
-  'combos-grande-fome',
-  'combos-individuais',
-];
-
 export function MenuScreen({
   items,
+  categories,
+  storeSettings,
   initialCategory = 'all',
   cartItems,
   onOpenCustomizer,
@@ -33,42 +36,62 @@ export function MenuScreen({
 
   const isCombosView = initialCategory === 'combos';
 
+  const activeCategories = useMemo(
+    () => categories.filter((c) => c.active !== false),
+    [categories]
+  );
+
+  const comboCategoryKeys = useMemo(
+    () => activeCategories.filter((c) => c.isCombo).map((c) => c.key),
+    [activeCategories]
+  );
+
+  const publishedItems = useMemo(
+    () => items.filter((item) => item.published !== false),
+    [items]
+  );
+
   const categoryTabs = useMemo<{ id: MenuCategory; label: string }[]>(() => {
     if (isCombosView) {
       return [
         { id: 'combos', label: 'Todos os Combos' },
-        ...MENU_CATEGORIES.filter((c) => c.isCombo).map((c) => ({
-          id: c.key,
-          label: c.title,
-        })),
+        ...activeCategories
+          .filter((c) => c.isCombo)
+          .map((c) => ({
+            id: c.key,
+            label: c.title,
+          })),
       ];
     }
     return [
       { id: 'all', label: 'Todo o Cardápio' },
-      ...MENU_CATEGORIES.map((c) => ({
+      ...activeCategories.map((c) => ({
         id: c.key,
         label: c.title,
       })),
     ];
-  }, [isCombosView]);
+  }, [isCombosView, activeCategories]);
 
   const effectiveCategory = selectedCategory;
 
-  const heroItem = useMemo(() => items.find((item) => item.isHero) ?? items[0], [items]);
+  const heroItem = useMemo(
+    () => publishedItems.find((item) => item.isHero) ?? publishedItems[0],
+    [publishedItems]
+  );
 
   const featuredItems = useMemo(
-    () => items.filter((item) => item.featured),
-    [items]
+    () => publishedItems.filter((item) => item.featured),
+    [publishedItems]
   );
 
   const filteredItems = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    return items.filter((item) => {
+    return publishedItems.filter((item) => {
       const matchesCategory =
         effectiveCategory === 'all'
           ? true
           : effectiveCategory === 'combos'
-          ? COMBO_CATEGORY_KEYS.includes(item.category)
+          ? comboCategoryKeys.includes(item.category)
           : item.category === effectiveCategory;
       const matchesSearch =
         !query ||
@@ -77,7 +100,7 @@ export function MenuScreen({
         item.categoryLabel.toLowerCase().includes(query);
       return matchesCategory && matchesSearch;
     });
-  }, [items, effectiveCategory, searchQuery]);
+  }, [publishedItems, effectiveCategory, searchQuery, comboCategoryKeys]);
 
   const getItemCountInBag = (menuItemId: string) =>
     cartItems
@@ -85,11 +108,13 @@ export function MenuScreen({
       .reduce((sum, ci) => sum + ci.quantity, 0);
 
   const groupedSections = useMemo(() => {
-    return MENU_CATEGORIES.map((section) => ({
-      ...section,
-      items: filteredItems.filter((item) => item.category === section.key),
-    })).filter((section) => section.items.length > 0);
-  }, [filteredItems]);
+    return activeCategories
+      .map((section) => ({
+        ...section,
+        items: filteredItems.filter((item) => item.category === section.key),
+      }))
+      .filter((section) => section.items.length > 0);
+  }, [activeCategories, filteredItems]);
 
   const showSpotlightAndFeatured =
     !searchQuery.trim() && effectiveCategory === 'all';
@@ -106,19 +131,21 @@ export function MenuScreen({
                   <span className="font-semibold text-[#16A34A]">Aberto agora</span>
                   <span aria-hidden="true">·</span>
                   <span>
-                    {STORE_INFO.neighborhood}, {STORE_INFO.city}
+                    {storeSettings.neighborhood}, {storeSettings.city}
                   </span>
                   <span aria-hidden="true">·</span>
-                  <span>Entrega em {STORE_INFO.deliveryTimeMin} min</span>
+                  <span>Entrega em {storeSettings.deliveryTimeMin} min</span>
                 </div>
 
                 <h1 className="text-[30px] sm:text-[38px] font-extrabold leading-[1.14] tracking-[-0.03em] text-[#1C1B1B] text-balance">
-                  {STORE_INFO.heroHeadline}
+                  {storeSettings.heroHeadline}
                 </h1>
 
                 <p className="text-[15px] leading-[1.55] text-[#5A413A] max-w-[46ch]">
-                  Destaque do dia: <strong>{heroItem.name}</strong> ({heroItem.description}). Pedido mínimo de{' '}
-                  {formatBRL(STORE_INFO.minOrder)} e entrega fixa de {formatBRL(STORE_INFO.deliveryFee)}.
+                  Destaque do dia: <strong>{heroItem.name}</strong>
+                  {heroItem.description ? ` (${heroItem.description})` : ''}. Pedido mínimo de{' '}
+                  {formatBRL(storeSettings.minOrder)} e entrega fixa de{' '}
+                  {formatBRL(storeSettings.deliveryFee)}.
                 </p>
               </div>
 
@@ -163,7 +190,7 @@ export function MenuScreen({
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={STORE_INFO.searchPlaceholder}
+              placeholder={storeSettings.searchPlaceholder}
               aria-label="Buscar itens do cardápio"
               className="w-full min-h-[44px] pl-10 pr-10 py-2.5 bg-[#FFFFFF] border border-[#EAEAEA] focus:border-brand focus:outline-none rounded-[10px] text-[14px] text-[#1C1B1B] placeholder:text-[#8E7069] transition-colors"
             />
@@ -332,7 +359,7 @@ export function MenuScreen({
       {groupedSections.length === 0 ? (
         <div className="bg-[#FFFFFF] border border-[#EAEAEA] rounded-xl p-10 text-center space-y-3">
           <p className="text-[17px] font-semibold text-[#1C1B1B]">
-            Nenhum item encontrado para &ldquo;{searchQuery}&rdquo;
+            Nenhum item encontrado {searchQuery ? `para "${searchQuery}"` : ''}
           </p>
           <p className="text-[14px] text-[#5A413A]">
             Tente limpar a busca ou selecionar Todo o Cardápio.

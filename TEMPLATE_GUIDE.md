@@ -28,4 +28,11 @@ Altere apenas os tokens do bloco `@theme` para aplicar a identidade visual do no
 ### 4. Metadados e Firebase
 - `index.html`: atualize `<title>`, `<meta name="description">`, `og:title` e `og:description`.
 - `metadata.json`: atualize nome e descrição do novo app.
-- Caso utilize Firebase, configure o projeto do novo cliente sem versionar chaves secretas no repositório.
+- Caso utilize Firebase, configure o projeto do novo cliente via variável de ambiente (`VITE_FIREBASE_API_KEY`) sem versionar chaves no repositório.
+
+### 5. Painel Administrativo (`/admin`) e Deploy na Vercel
+- O projeto segue arquitetura monorepo (`server/` com Express + `src/client/` com React/Vite).
+- **Mesmo domínio (padrão)**: acesse `/` para o cardápio público e `/admin` para o painel administrativo (`vercel.json` já faz o roteamento).
+- **Domínio separado para o painel**: crie um segundo projeto na Vercel apontando para o mesmo repositório e defina `VITE_APP_MODE=admin` nas Environment Variables (ou configure `VITE_ADMIN_HOST`).
+- O e-mail principal administrador fica configurado em `src/shared/firebase.ts` (`BOOTSTRAP_ADMIN_EMAIL`) e em `firestore.rules`.
+

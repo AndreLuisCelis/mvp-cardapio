@@ -1,7 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AlertCircle, ArrowLeft, MessageCircle, Minus, Plus, Trash2 } from 'lucide-react';
-import { NEIGHBORHOOD_FEES, STORE_INFO } from '../config/store';
-import { BuyerData, CartItem, FulfillmentType, MenuItem } from '../types';
+import {
+  BuyerData,
+  CartItem,
+  DeliveryFeeOption,
+  FulfillmentType,
+  MenuItem,
+  StoreSettingsRecord,
+} from '../types';
 import { formatBRL } from '../utils/format';
 import { ResilientImage } from './ResilientImage';
 
@@ -10,6 +16,8 @@ type PaymentMethod = 'Pix' | 'Cartão' | 'Dinheiro';
 interface CheckoutScreenProps {
   cartItems: CartItem[];
   suggestedItems: MenuItem[];
+  deliveryFees: DeliveryFeeOption[];
+  storeSettings: StoreSettingsRecord;
   onBackToMenu: () => void;
   onUpdateQuantity: (cartItemId: string, delta: number) => void;
   onRemoveItem: (cartItemId: string) => void;
@@ -48,6 +56,8 @@ export function formatCartItemSummary(cartItem: CartItem): string {
 export function CheckoutScreen({
   cartItems,
   suggestedItems,
+  deliveryFees,
+  storeSettings,
   onBackToMenu,
   onUpdateQuantity,
   onRemoveItem,
@@ -55,8 +65,13 @@ export function CheckoutScreen({
   onQuickAdd,
   onPlaceOrder,
 }: CheckoutScreenProps) {
+  const activeFees = useMemo(
+    () => deliveryFees.filter((f) => f.active !== false),
+    [deliveryFees]
+  );
+
   const [selectedNeighborhoodId, setSelectedNeighborhoodId] = useState<string>(
-    NEIGHBORHOOD_FEES[0]?.id ?? 'retirada'
+    activeFees[0]?.id ?? 'retirada'
   );
   const [tipPercent, setTipPercent] = useState<number>(0);
   const [nome, setNome] = useState('');
@@ -72,11 +87,24 @@ export function CheckoutScreen({
     bairro?: boolean;
   }>({});
 
+  useEffect(() => {
+    if (activeFees.length > 0 && !activeFees.some((f) => f.id === selectedNeighborhoodId)) {
+      setSelectedNeighborhoodId(activeFees[0].id);
+    }
+  }, [activeFees, selectedNeighborhoodId]);
+
   const selectedNeighborhood = useMemo(
     () =>
-      NEIGHBORHOOD_FEES.find((n) => n.id === selectedNeighborhoodId) ??
-      NEIGHBORHOOD_FEES[0],
-    [selectedNeighborhoodId]
+      activeFees.find((n) => n.id === selectedNeighborhoodId) ??
+      activeFees[0] ?? {
+        id: 'retirada',
+        label: 'Retirada no Balcão',
+        fee: 0,
+        fulfillment: 'pickup' as FulfillmentType,
+        active: true,
+        sortOrder: 1,
+      },
+    [activeFees, selectedNeighborhoodId]
   );
 
   const subtotal = useMemo(
@@ -99,10 +127,10 @@ export function CheckoutScreen({
       return;
     }
 
-    const isPickup = selectedNeighborhood.id === 'retirada';
-    if (!isPickup && subtotal < STORE_INFO.minOrder) {
+    const isPickup = selectedNeighborhood.fulfillment === 'pickup';
+    if (!isPickup && subtotal < storeSettings.minOrder) {
       setValidationError(
-        `O pedido mínimo para entrega é de ${formatBRL(STORE_INFO.minOrder)}. Adicione mais ${formatBRL(STORE_INFO.minOrder - subtotal)} ou selecione Retirada no Balcão.`
+        `O pedido mínimo para entrega é de ${formatBRL(storeSettings.minOrder)}. Adicione mais ${formatBRL(storeSettings.minOrder - subtotal)} ou selecione Retirada no Balcão.`
       );
       return;
     }
@@ -142,12 +170,8 @@ export function CheckoutScreen({
         : `*Pagamento:* ${paymentMethod}`;
 
     const entregaLine = isPickup
-      ? `*Entrega:* Retirada no Balcão`
+      ? `*Entrega:* ${selectedNeighborhood.label}`
       : `*Entrega:* ${endereco.trim()} - ${selectedNeighborhood.label}`;
-
-    const bairroLine = isPickup
-      ? ''
-      : `*Bairro:* ${selectedNeighborhood.label}`;
 
     const itemLines = cartItems.map((ci) => {
       const line = `• ${ci.quantidade}x ${ci.nome} - ${formatBRL(ci.preco * ci.quantidade)}`;
@@ -161,7 +185,6 @@ export function CheckoutScreen({
       ...itemLines,
       '',
       entregaLine,
-      ...(isPickup ? [bairroLine] : []),
       paymentLine,
       '',
       `Subtotal: ${formatBRL(subtotal)}`,
@@ -170,8 +193,12 @@ export function CheckoutScreen({
       `*TOTAL: ${formatBRL(total)}*`,
     ].join('\n');
 
-    const whatsappUrl = `https://wa.me/${STORE_INFO.whatsappNumber}?text=${encodeURIComponent(mensagem)}`;
-    window.open(whatsappUrl, '_blank');
+    const whatsappUrl = `https://wa.me/${storeSettings.whatsappNumber}?text=${encodeURIComponent(mensagem)}`;
+    const link = document.createElement('a');
+    link.href = whatsappUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.click();
 
     onPlaceOrder({
       fulfillment: selectedNeighborhood.fulfillment,
@@ -195,7 +222,7 @@ export function CheckoutScreen({
             Sua sacola está vazia
           </h1>
           <p className="text-[15px] text-[#5A413A] max-w-md mx-auto">
-            {STORE_INFO.emptyBagDescription}
+            {storeSettings.emptyBagDescription}
           </p>
           <div className="pt-2">
             <button
@@ -255,14 +282,15 @@ export function CheckoutScreen({
               </label>
               <select
                 id="bairro-frete"
-                value={selectedNeighborhoodId}
+                value={selectedNeighborhood.id}
                 onChange={(e) => {
                   const nextId = e.target.value;
+                  const nextOpt = activeFees.find((f) => f.id === nextId);
                   setSelectedNeighborhoodId(nextId);
                   setMissingFields((prev) => ({
                     ...prev,
                     bairro: false,
-                    endereco: nextId === 'retirada' ? false : prev.endereco,
+                    endereco: nextOpt?.fulfillment === 'pickup' ? false : prev.endereco,
                   }));
                   if (validationError) setValidationError(null);
                 }}
@@ -272,7 +300,7 @@ export function CheckoutScreen({
                     : 'border-[#EAEAEA] focus:border-brand'
                 }`}
               >
-                {NEIGHBORHOOD_FEES.map((option) => (
+                {activeFees.map((option) => (
                   <option key={option.id} value={option.id}>
                     {option.label} — {formatBRL(option.fee)}
                   </option>
@@ -609,10 +637,10 @@ export function CheckoutScreen({
           </div>
 
           {selectedNeighborhood.fulfillment === 'delivery' &&
-            subtotal < STORE_INFO.minOrder && (
+            subtotal < storeSettings.minOrder && (
               <div className="px-3.5 py-2.5 rounded-[10px] border border-[#F59E0B] bg-[#FFFBEB] text-[13px] font-medium text-[#845300] tabular-nums">
-                Pedido mínimo para entrega: {formatBRL(STORE_INFO.minOrder)}. Faltam{' '}
-                {formatBRL(STORE_INFO.minOrder - subtotal)}.
+                Pedido mínimo para entrega: {formatBRL(storeSettings.minOrder)}. Faltam{' '}
+                {formatBRL(storeSettings.minOrder - subtotal)}.
               </div>
             )}
 
@@ -625,7 +653,7 @@ export function CheckoutScreen({
           </button>
 
           <p className="text-[12px] text-[#8E7069] text-center">
-            {STORE_INFO.paymentMethodsLabel}
+            {storeSettings.paymentMethodsLabel}
           </p>
         </aside>
       </form>
