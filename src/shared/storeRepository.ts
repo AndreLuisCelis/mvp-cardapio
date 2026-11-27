@@ -669,6 +669,30 @@ export async function ensureBootstrapAdminRecord(user: User): Promise<StaffUserR
 
     return null;
   } catch (err) {
+    // O getDoc falha quando o documento não existe (Firestore retorna
+    // "Missing or insufficient permissions" para documentos ausentes).
+    // Para o bootstrap admin, tentamos criar o registro diretamente.
+    if (user.email === BOOTSTRAP_ADMIN_EMAIL && user.emailVerified) {
+      try {
+        const record: StaffUserRecord = {
+          uid: user.uid,
+          email: user.email,
+          displayName: (user.displayName || 'Administrador Principal').slice(0, 80),
+          role: 'admin',
+          canManageUsers: true,
+          active: true,
+          createdBy: user.uid,
+        };
+        await setDoc(doc(db, 'users', user.uid), {
+          ...record,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+        return record;
+      } catch (createErr) {
+        handleFirestoreError(createErr, OperationType.CREATE, path);
+      }
+    }
     handleFirestoreError(err, OperationType.GET, path);
   }
 }
