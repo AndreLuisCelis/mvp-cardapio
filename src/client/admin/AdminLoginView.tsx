@@ -2,8 +2,6 @@ import { useState } from 'react';
 import {
   AlertCircle,
   CheckCircle2,
-  ChevronDown,
-  ChevronUp,
   Eye,
   EyeOff,
   Lock,
@@ -16,11 +14,10 @@ import {
   sendEmailVerification,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
-  signInWithPopup,
   signOut,
   type User,
 } from 'firebase/auth';
-import { auth, googleProvider, hasFirebaseConfig } from '../../shared/firebase';
+import { auth, hasFirebaseConfig } from '../../shared/firebase';
 
 interface AdminLoginViewProps {
   currentUser: User | null;
@@ -47,7 +44,6 @@ export function AdminLoginView({
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [infoMsg, setInfoMsg] = useState<string | null>(null);
-  const [showConsoleGuide, setShowConsoleGuide] = useState(false);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,31 +67,11 @@ export function AdminLoginView({
       ) {
         setErrorMsg('E-mail ou senha inválidos.');
       } else if (code === 'auth/operation-not-allowed') {
-        setErrorMsg(
-          'O provedor E-mail/Senha ainda não está ativado no Firebase Console. Veja as instruções abaixo ou entre com Google.'
-        );
-        setShowConsoleGuide(true);
+        setErrorMsg('O login por e-mail e senha não está habilitado para este projeto.');
       } else if (code === 'auth/too-many-requests') {
         setErrorMsg('Muitas tentativas seguidas. Aguarde alguns instantes e tente novamente.');
       } else {
         setErrorMsg('Não foi possível autenticar. Verifique seus dados e tente novamente.');
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    if (!auth) return;
-    setSubmitting(true);
-    setErrorMsg(null);
-    setInfoMsg(null);
-    try {
-      await signInWithPopup(auth, googleProvider);
-    } catch (err: unknown) {
-      const code = (err as { code?: string })?.code || '';
-      if (code !== 'auth/popup-closed-by-user') {
-        setErrorMsg('Não foi possível concluir o login com Google.');
       }
     } finally {
       setSubmitting(false);
@@ -325,62 +301,9 @@ export function AdminLoginView({
                   disabled={submitting}
                   className="w-full min-h-[44px] px-4 py-2.5 rounded-lg bg-[#0F172A] hover:bg-[#1E293B] text-white text-[14px] font-semibold transition-colors cursor-pointer disabled:opacity-60"
                 >
-                  {submitting ? 'Entrando...' : 'Entrar com E-mail e Senha'}
+                  {submitting ? 'Entrando...' : 'Entrar'}
                 </button>
               </form>
-
-              <div className="relative flex items-center py-1">
-                <div className="flex-grow border-t border-[#E2E8F0]" />
-                <span className="shrink-0 mx-3 text-[12px] font-medium text-[#64748B]">
-                  ou
-                </span>
-                <div className="flex-grow border-t border-[#E2E8F0]" />
-              </div>
-
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={handleGoogleLogin}
-                className="w-full min-h-[44px] px-4 py-2.5 rounded-lg bg-[#FFFFFF] hover:bg-[#F8FAFC] border border-[#CBD5E1] text-[#0F172A] text-[14px] font-semibold transition-colors cursor-pointer disabled:opacity-60"
-              >
-                Entrar com Google
-              </button>
-
-              <div className="border-t border-[#E2E8F0] pt-3">
-                <button
-                  type="button"
-                  onClick={() => setShowConsoleGuide((prev) => !prev)}
-                  className="w-full flex items-center justify-between text-[12px] font-semibold text-[#475569] hover:text-[#0F172A] cursor-pointer"
-                >
-                  <span>Como ativar E-mail e Senha no Firebase Console</span>
-                  {showConsoleGuide ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
-                  )}
-                </button>
-                {showConsoleGuide && (
-                  <ol className="mt-2.5 space-y-1.5 text-[12px] text-[#475569] list-decimal pl-4">
-                    <li>
-                      Acesse o Firebase Console no projeto{' '}
-                      <code className="font-mono text-[#0F172A]">algebraic-flow-mmn89</code>.
-                    </li>
-                    <li>
-                      No menu lateral, clique em <strong>Authentication</strong> &rarr;{' '}
-                      <strong>Sign-in method</strong>.
-                    </li>
-                    <li>
-                      Clique em <strong>Adicionar novo provedor</strong> &rarr;{' '}
-                      <strong>E-mail/senha</strong>, ative a opção e salve.
-                    </li>
-                    <li>
-                      Para criar sua senha inicial, cadastre seu e-mail na aba{' '}
-                      <strong>Users</strong> ou entre primeiro pelo botão{' '}
-                      <strong>Entrar com Google</strong>.
-                    </li>
-                  </ol>
-                )}
-              </div>
             </>
           )}
         </div>
