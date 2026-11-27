@@ -8,7 +8,6 @@ import {
   type Auth,
 } from 'firebase/auth';
 import { doc, getDocFromServer, getFirestore, type Firestore } from 'firebase/firestore';
-import firebaseAppletConfig from '../../firebase-applet-config.json';
 
 export const BOOTSTRAP_ADMIN_EMAIL = 'andreluiscelis@celisapp.com';
 
@@ -39,34 +38,16 @@ export interface FirestoreErrorInfo {
 }
 
 const resolvedFirebaseConfig = {
-  apiKey: (import.meta.env.VITE_FIREBASE_API_KEY || firebaseAppletConfig.apiKey || '').trim(),
-  authDomain: (
-    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ||
-    firebaseAppletConfig.authDomain ||
-    ''
-  ).trim(),
-  projectId: (
-    import.meta.env.VITE_FIREBASE_PROJECT_ID ||
-    firebaseAppletConfig.projectId ||
-    ''
-  ).trim(),
-  storageBucket: (
-    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ||
-    firebaseAppletConfig.storageBucket ||
-    ''
-  ).trim(),
-  messagingSenderId: (
-    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ||
-    firebaseAppletConfig.messagingSenderId ||
-    ''
-  ).trim(),
-  appId: (import.meta.env.VITE_FIREBASE_APP_ID || firebaseAppletConfig.appId || '').trim(),
+  apiKey: (import.meta.env.VITE_FIREBASE_API_KEY || '').trim(),
+  authDomain: (import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '').trim(),
+  projectId: (import.meta.env.VITE_FIREBASE_PROJECT_ID || '').trim(),
+  storageBucket: (import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '').trim(),
+  messagingSenderId: (import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '').trim(),
+  appId: (import.meta.env.VITE_FIREBASE_APP_ID || '').trim(),
 };
 
 export const FIRESTORE_DATABASE_ID = (
-  import.meta.env.VITE_FIREBASE_DATABASE_ID ||
-  firebaseAppletConfig.firestoreDatabaseId ||
-  '(default)'
+  import.meta.env.VITE_FIREBASE_DATABASE_ID || '(default)'
 ).trim();
 
 export const hasFirebaseConfig = Boolean(
