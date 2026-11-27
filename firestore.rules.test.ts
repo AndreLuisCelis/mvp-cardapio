@@ -147,4 +147,30 @@ export const DIRTY_DOZEN_PAYLOADS: SecurityTestCase[] = [
     },
     expected: 'PERMISSION_DENIED',
   },
+  {
+    id: 13,
+    name: 'Public Stage Tampering on Order or Tracker',
+    collectionPath: 'order_trackers/0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+    operation: 'update',
+    actor: 'buyer',
+    payload: { stage: 3 },
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    id: 14,
+    name: 'Guessable Short Tracker ID Read',
+    collectionPath: 'order_trackers/short-id-123',
+    operation: 'get',
+    actor: 'anonymous',
+    expected: 'PERMISSION_DENIED',
+  },
+  {
+    id: 15,
+    name: 'Direct Public Order Get Without Staff Auth',
+    collectionPath: 'orders/order-test-1',
+    operation: 'get',
+    actor: 'anonymous',
+    expected: 'PERMISSION_DENIED',
+  },
 ];
+

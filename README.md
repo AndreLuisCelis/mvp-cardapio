@@ -8,13 +8,24 @@ This contains everything you need to run your app locally.
 
 View your app in AI Studio: https://ai.studio/apps/070f84c3-5316-4f55-880a-3e36752f984a
 
-## Run Locally
+## Executar Localmente
 
-**Prerequisites:**  Node.js
+**Pré-requisitos:** Node.js 20+
 
-
-1. Install dependencies:
+1. Instale as dependências:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
+2. Copie `.env.example` para `.env.local` e preencha as variáveis públicas `VITE_FIREBASE_*` (nunca versione chaves reais).
+3. Inicie o servidor de desenvolvimento (cardápio em `/` e painel em `/admin`):
    `npm run dev`
+
+## Validação e Build
+
+- `npm run typecheck` — verificação de tipos TypeScript
+- `npm run lint` — lint do código da aplicação
+- `npm run lint:rules` — lint das regras Firestore (`firestore.rules`)
+- `npm test` — testes automatizados de pedidos, restauração, zero-PII e segurança
+- `npm run build` — build público
+- `npm run build:admin` — build administrativo (compatível com Windows e POSIX)
+
+Consulte `TEMPLATE_GUIDE.md` e `security_spec.md` para detalhes de operação, personalização e arquitetura de segurança.
+

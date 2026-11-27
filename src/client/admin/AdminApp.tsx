@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+  ClipboardList,
   Database,
   ExternalLink,
   FolderTree,
@@ -31,10 +32,11 @@ import { AdminLoginView } from './AdminLoginView';
 import { CategoriesAdminView } from './views/CategoriesAdminView';
 import { DeliveryFeesAdminView } from './views/DeliveryFeesAdminView';
 import { MenuItemsAdminView } from './views/MenuItemsAdminView';
+import { OrdersAdminView } from './views/OrdersAdminView';
 import { StoreSettingsAdminView } from './views/StoreSettingsAdminView';
 import { UsersAdminView } from './views/UsersAdminView';
 
-type AdminTab = 'menu' | 'categories' | 'store' | 'fees' | 'users';
+type AdminTab = 'orders' | 'menu' | 'categories' | 'store' | 'fees' | 'users';
 
 interface AdminAppProps {
   showStorefrontLink?: boolean;
@@ -214,6 +216,7 @@ export function AdminApp({ showStorefrontLink = true, onNavigateStorefront }: Ad
   }
 
   const navItems: { id: AdminTab; label: string; icon: typeof UtensilsCrossed }[] = [
+    { id: 'orders', label: 'Pedidos', icon: ClipboardList },
     { id: 'menu', label: 'Cardápio', icon: UtensilsCrossed },
     { id: 'categories', label: 'Categorias', icon: FolderTree },
     { id: 'store', label: 'Loja & Logo', icon: Store },
@@ -405,6 +408,7 @@ export function AdminApp({ showStorefrontLink = true, onNavigateStorefront }: Ad
             </div>
           ) : (
             <>
+              {activeTab === 'orders' && <OrdersAdminView />}
               {activeTab === 'menu' && (
                 <MenuItemsAdminView
                   items={workspace.menuItems}

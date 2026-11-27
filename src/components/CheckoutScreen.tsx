@@ -1,5 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, ArrowLeft, MessageCircle, Minus, Plus, Trash2 } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowLeft,
+  Info,
+  Loader2,
+  MessageCircle,
+  Minus,
+  Plus,
+  Trash2,
+} from 'lucide-react';
+import { hasFirebaseConfig } from '../shared/firebase';
+import { formatCartItemCustomizationsOnly } from '../shared/orderRepository';
+import { loadBuyerProfile, saveBuyerProfile } from '../shared/orderStorage';
 import {
   BuyerData,
   CartItem,
@@ -11,13 +23,14 @@ import {
 import { formatBRL } from '../utils/format';
 import { ResilientImage } from './ResilientImage';
 
-type PaymentMethod = 'Pix' | 'Cartão' | 'Dinheiro';
+export type PaymentMethod = 'Pix' | 'Cartão' | 'Dinheiro';
 
 interface CheckoutScreenProps {
   cartItems: CartItem[];
   suggestedItems: MenuItem[];
   deliveryFees: DeliveryFeeOption[];
   storeSettings: StoreSettingsRecord;
+  isSubmittingOrder?: boolean;
   onBackToMenu: () => void;
   onUpdateQuantity: (cartItemId: string, delta: number) => void;
   onRemoveItem: (cartItemId: string) => void;
@@ -29,24 +42,17 @@ interface CheckoutScreenProps {
     deliveryFee: number;
     buyer: BuyerData;
     tipPercent: number;
-  }) => void;
+    paymentMethod: PaymentMethod;
+    troco: string;
+  }) => Promise<void> | void;
 }
 
 export function formatCartItemSummary(cartItem: CartItem): string {
   const parts: string[] = [];
-  cartItem.menuItem.customizationGroups.forEach((group) => {
-    if (group.type === 'single') {
-      const choiceId = cartItem.selectedSingle[group.id];
-      const choice = group.choices.find((c) => c.id === choiceId);
-      if (choice) parts.push(choice.label);
-    } else {
-      const ids = cartItem.selectedMulti[group.id] || [];
-      ids.forEach((id) => {
-        const choice = group.choices.find((c) => c.id === id);
-        if (choice) parts.push(`+ ${choice.label}`);
-      });
-    }
-  });
+  const customizations = formatCartItemCustomizationsOnly(cartItem);
+  if (customizations) {
+    parts.push(customizations);
+  }
   if (cartItem.observacao) {
     parts.push(`Obs: "${cartItem.observacao}"`);
   }
@@ -58,6 +64,7 @@ export function CheckoutScreen({
   suggestedItems,
   deliveryFees,
   storeSettings,
+  isSubmittingOrder = false,
   onBackToMenu,
   onUpdateQuantity,
   onRemoveItem,
@@ -70,13 +77,15 @@ export function CheckoutScreen({
     [deliveryFees]
   );
 
+  const savedProfile = useMemo(() => loadBuyerProfile(), []);
+
   const [selectedNeighborhoodId, setSelectedNeighborhoodId] = useState<string>(
-    activeFees[0]?.id ?? 'retirada'
+    savedProfile?.selectedNeighborhoodId || activeFees[0]?.id || 'retirada'
   );
   const [tipPercent, setTipPercent] = useState<number>(0);
-  const [nome, setNome] = useState('');
-  const [whatsapp, setWhatsapp] = useState('');
-  const [endereco, setEndereco] = useState('');
+  const [nome, setNome] = useState(savedProfile?.nome || '');
+  const [whatsapp, setWhatsapp] = useState(savedProfile?.whatsapp || '');
+  const [endereco, setEndereco] = useState(savedProfile?.endereco || '');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Pix');
   const [troco, setTroco] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -120,8 +129,10 @@ export function CheckoutScreen({
     return suggestedItems.filter((item) => !idsInBag.has(item.id)).slice(0, 2);
   }, [cartItems, suggestedItems]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmittingOrder) return;
+
     if (cartItems.length === 0) {
       setValidationError('Adicione pelo menos um item à sacola antes de enviar o pedido.');
       return;
@@ -163,54 +174,28 @@ export function CheckoutScreen({
     setMissingFields({});
     setValidationError(null);
 
-    const cleanTroco = troco.trim().replace(/^R\$\s*/i, '');
-    const paymentLine =
-      paymentMethod === 'Dinheiro' && cleanTroco
-        ? `*Pagamento:* Dinheiro (Troco para R$ ${cleanTroco})`
-        : `*Pagamento:* ${paymentMethod}`;
+    const trimmedBuyer: BuyerData = {
+      nome: nome.trim(),
+      whatsapp: whatsapp.trim(),
+      endereco: endereco.trim(),
+      bairro: selectedNeighborhood.label,
+    };
 
-    const entregaLine = isPickup
-      ? `*Entrega:* ${selectedNeighborhood.label}`
-      : `*Entrega:* ${endereco.trim()} - ${selectedNeighborhood.label}`;
-
-    const itemLines = cartItems.map((ci) => {
-      const line = `• ${ci.quantidade}x ${ci.nome} - ${formatBRL(ci.preco * ci.quantidade)}`;
-      const obs = ci.observacao.trim();
-      return obs ? `${line}\n_Obs: ${obs}_` : line;
+    saveBuyerProfile({
+      nome: trimmedBuyer.nome,
+      whatsapp: trimmedBuyer.whatsapp,
+      endereco: trimmedBuyer.endereco,
+      selectedNeighborhoodId: selectedNeighborhood.id,
     });
 
-    const mensagem = [
-      `*NOVO PEDIDO - ${nome.trim()}*`,
-      '',
-      ...itemLines,
-      '',
-      entregaLine,
-      paymentLine,
-      '',
-      `Subtotal: ${formatBRL(subtotal)}`,
-      `Taxa de Entrega: ${formatBRL(deliveryFee)}`,
-      ...(tip > 0 ? [`Gorjeta (${tipPercent}%): ${formatBRL(tip)}`] : []),
-      `*TOTAL: ${formatBRL(total)}*`,
-    ].join('\n');
-
-    const whatsappUrl = `https://wa.me/${storeSettings.whatsappNumber}?text=${encodeURIComponent(mensagem)}`;
-    const link = document.createElement('a');
-    link.href = whatsappUrl;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    link.click();
-
-    onPlaceOrder({
+    await onPlaceOrder({
       fulfillment: selectedNeighborhood.fulfillment,
       neighborhoodLabel: selectedNeighborhood.label,
       deliveryFee,
-      buyer: {
-        nome: nome.trim(),
-        whatsapp: whatsapp.trim(),
-        endereco: endereco.trim(),
-        bairro: selectedNeighborhood.label,
-      },
+      buyer: trimmedBuyer,
       tipPercent,
+      paymentMethod,
+      troco,
     });
   };
 
@@ -644,12 +629,31 @@ export function CheckoutScreen({
               </div>
             )}
 
+          {!hasFirebaseConfig && (
+            <div className="flex items-start gap-2.5 px-3.5 py-2.5 rounded-[10px] border border-[#E2E8F0] bg-[#F8FAFC] text-[12px] text-[#475569]">
+              <Info className="w-4 h-4 shrink-0 mt-0.5 text-[#64748B]" />
+              <span>
+                Acompanhamento em tempo real indisponível neste ambiente. Seu pedido será enviado diretamente pelo WhatsApp.
+              </span>
+            </div>
+          )}
+
           <button
             type="submit"
-            className="w-full min-h-[50px] px-6 py-3.5 rounded-lg bg-brand hover:bg-brand-hover active:scale-[0.98] text-[#FFFFFF] text-[15px] font-bold inline-flex items-center justify-center gap-2 transition-all cursor-pointer tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+            disabled={isSubmittingOrder}
+            className="w-full min-h-[50px] px-6 py-3.5 rounded-lg bg-brand hover:bg-brand-hover active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed text-[#FFFFFF] text-[15px] font-bold inline-flex items-center justify-center gap-2 transition-all cursor-pointer tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           >
-            <MessageCircle className="w-4 h-4 shrink-0" strokeWidth={2.2} />
-            <span>Enviar Pedido no WhatsApp · {formatBRL(total)}</span>
+            {isSubmittingOrder ? (
+              <>
+                <Loader2 className="w-4 h-4 shrink-0 animate-spin" strokeWidth={2.2} />
+                <span>Registrando e enviando pedido...</span>
+              </>
+            ) : (
+              <>
+                <MessageCircle className="w-4 h-4 shrink-0" strokeWidth={2.2} />
+                <span>Enviar Pedido no WhatsApp · {formatBRL(total)}</span>
+              </>
+            )}
           </button>
 
           <p className="text-[12px] text-[#8E7069] text-center">

@@ -6,12 +6,14 @@
   "scripts": {
     "dev": "tsx server.ts",
     "build": "vite build",
-    "build:admin": "VITE_APP_MODE=admin vite build",
+    "build:admin": "node scripts/build-admin.mjs",
     "start": "NODE_ENV=production node server.ts",
     "preview": "vite preview",
-    "clean": "rm -rf dist server.js",
-    "lint": "tsc --noEmit",
-    "lint:rules": "eslint firestore.rules"
+    "clean": "node -e \"import('node:fs').then(fs => { fs.rmSync('dist', { recursive: true, force: true }); fs.rmSync('server.js', { force: true }); })\"",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src server api tests scripts",
+    "lint:rules": "eslint firestore.rules",
+    "test": "tsx --test tests/*.test.ts"
   },
   "dependencies": {
     "esbuild": "^0.28.2",

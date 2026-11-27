@@ -1,12 +1,34 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ShoppingBag } from 'lucide-react';
-import { CheckoutScreen, formatCartItemSummary } from '../../components/CheckoutScreen';
+import {
+  CheckoutScreen,
+  formatCartItemSummary,
+  type PaymentMethod,
+} from '../../components/CheckoutScreen';
 import { CustomizerModal } from '../../components/CustomizerModal';
 import { HearthScreen } from '../../components/HearthScreen';
 import { MenuScreen } from '../../components/MenuScreen';
 import { OrdersScreen } from '../../components/OrdersScreen';
 import { TopNav } from '../../components/TopNav';
 import { MENU_ITEMS } from '../../data/menu';
+import { hasFirebaseConfig } from '../../shared/firebase';
+import {
+  buildWhatsAppOrderMessage,
+  buildWhatsAppOrderUrl,
+  computeEstimatedReadyTime,
+  createPersistedOrder,
+  fetchTrackedOrderSnapshot,
+  formatCartItemCustomizationsOnly,
+  generateOrderCode,
+  subscribeToTrackedOrder,
+  type CreateOrderInput,
+} from '../../shared/orderRepository';
+import {
+  formatOrderPlacedAt,
+  loadTrackedOrders,
+  saveTrackedOrder,
+  updateTrackedOrderStageLocally,
+} from '../../shared/orderStorage';
 import {
   DEFAULT_CATEGORIES,
   DEFAULT_DELIVERY_FEES,
@@ -20,7 +42,6 @@ import {
   DeliveryFeeOption,
   FulfillmentType,
   MenuItem,
-  OrderStage,
   PlacedOrder,
   StoreCategoryConfig,
   StoreSettingsRecord,
@@ -43,6 +64,14 @@ function createDefaultSelections(item: MenuItem): {
   return { selectedSingle, selectedMulti };
 }
 
+function openExternalUrl(url: string): void {
+  const link = document.createElement('a');
+  link.href = url;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.click();
+}
+
 interface StorefrontAppProps {
   canOpenAdmin?: boolean;
   onOpenAdmin?: () => void;
@@ -52,6 +81,11 @@ export function StorefrontApp({ canOpenAdmin = false, onOpenAdmin }: StorefrontA
   const [activeScreen, setActiveScreen] = useState<AppScreen>('menu');
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<PlacedOrder[]>([]);
+  const [isRestoringOrders, setIsRestoringOrders] = useState<boolean>(true);
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState<boolean>(false);
+  const [retryingOrderId, setRetryingOrderId] = useState<string | null>(null);
+
+  const failedOrderInputsRef = useRef<Map<string, CreateOrderInput>>(new Map());
 
   const [storeSettings, setStoreSettings] = useState<StoreSettingsRecord>(DEFAULT_STORE_SETTINGS);
   const [categories, setCategories] = useState<StoreCategoryConfig[]>(DEFAULT_CATEGORIES);
@@ -79,6 +113,124 @@ export function StorefrontApp({ canOpenAdmin = false, onOpenAdmin }: StorefrontA
       cancelled = true;
     };
   }, []);
+
+  // Restore persisted tracked orders from localStorage & reconcile with Firestore
+  useEffect(() => {
+    let cancelled = false;
+    const restored = loadTrackedOrders();
+
+    if (restored.length === 0) {
+      setIsRestoringOrders(false);
+      return;
+    }
+
+    setOrders(
+      restored.map((o) => ({
+        ...o,
+        syncStatus: hasFirebaseConfig ? 'connecting' : 'inactive',
+      }))
+    );
+
+    if (!hasFirebaseConfig) {
+      setIsRestoringOrders(false);
+      return;
+    }
+
+    Promise.all(
+      restored.map(async (order) => {
+        if (!order.trackingToken) return order;
+        const result = await fetchTrackedOrderSnapshot(order.id, order.trackingToken);
+        if (result.status === 'found') {
+          updateTrackedOrderStageLocally(order.id, result.stage);
+          return {
+            ...order,
+            stage: result.stage,
+            estimatedReady: result.estimatedReady || order.estimatedReady,
+            syncStatus: 'live' as const,
+          };
+        }
+        if (result.status === 'unavailable') {
+          return { ...order, syncStatus: 'inactive' as const };
+        }
+        return {
+          ...order,
+          syncStatus: 'error' as const,
+        };
+      })
+    )
+      .then((hydrated) => {
+        if (cancelled) return;
+        setOrders(hydrated);
+      })
+      .finally(() => {
+        if (!cancelled) setIsRestoringOrders(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Real-time onSnapshot listeners for persisted active orders
+  const trackedSubscriptionKey = useMemo(
+    () =>
+      orders
+        .filter(
+          (o) =>
+            o.persistenceStatus === 'persisted' &&
+            Boolean(o.trackingToken) &&
+            o.stage < 3
+        )
+        .map((o) => `${o.id}:${o.trackingToken}`)
+        .join('|'),
+    [orders]
+  );
+
+  useEffect(() => {
+    if (!hasFirebaseConfig || !trackedSubscriptionKey) return;
+
+    const pairs = trackedSubscriptionKey.split('|').map((entry) => {
+      const idx = entry.indexOf(':');
+      return {
+        orderId: entry.slice(0, idx),
+        trackingToken: entry.slice(idx + 1),
+      };
+    });
+
+    const unsubscribers = pairs.map(({ orderId, trackingToken }) =>
+      subscribeToTrackedOrder(orderId, trackingToken, {
+        onUpdate: ({ stage, estimatedReady }) => {
+          updateTrackedOrderStageLocally(orderId, stage);
+          setOrders((prev) =>
+            prev.map((o) =>
+              o.id === orderId
+                ? {
+                    ...o,
+                    stage,
+                    estimatedReady: estimatedReady || o.estimatedReady,
+                    syncStatus: 'live',
+                  }
+                : o
+            )
+          );
+        },
+        onMissing: () => {
+          setOrders((prev) =>
+            prev.map((o) => (o.id === orderId ? { ...o, syncStatus: 'error' } : o))
+          );
+        },
+        onError: () => {
+          setOrders((prev) =>
+            prev.map((o) => (o.id === orderId ? { ...o, syncStatus: 'error' } : o))
+          );
+        },
+      })
+    );
+
+    return () => {
+      unsubscribers.forEach((unsub) => unsub());
+    };
+  }, [trackedSubscriptionKey]);
 
   const bagCount = useMemo(
     () => cartItems.reduce((sum, ci) => sum + ci.quantidade, 0),
@@ -266,70 +418,216 @@ export function StorefrontApp({ canOpenAdmin = false, onOpenAdmin }: StorefrontA
     setEditingCartItem(null);
   };
 
-  const handlePlaceOrder = (details: {
+  const handlePlaceOrder = async (details: {
     fulfillment: FulfillmentType;
     neighborhoodLabel: string;
     deliveryFee: number;
     buyer: BuyerData;
     tipPercent: number;
+    paymentMethod: PaymentMethod;
+    troco: string;
   }) => {
-    const subtotal = bagSubtotal;
-    const tip = subtotal * (details.tipPercent / 100);
-    const total = subtotal + details.deliveryFee + tip;
-
-    const suffix = 1043 + orders.length;
-    const orderCode = `${storeSettings.orderCodePrefix}-${suffix}`;
-    const now = new Date();
-    const readyDate = new Date(
-      now.getTime() +
-        (details.fulfillment === 'pickup'
+    setIsSubmittingOrder(true);
+    try {
+      const subtotal = bagSubtotal;
+      const tip = subtotal * (details.tipPercent / 100);
+      const total = subtotal + details.deliveryFee + tip;
+      const estimatedMinutes =
+        details.fulfillment === 'pickup'
           ? storeSettings.pickupEstimatedMinutes
-          : storeSettings.deliveryEstimatedMinutes) *
-          60000
-    );
-    const hours = String(readyDate.getHours()).padStart(2, '0');
-    const minutes = String(readyDate.getMinutes()).padStart(2, '0');
-    const estimatedReady = `${hours}h${minutes}`;
+          : storeSettings.deliveryEstimatedMinutes;
 
-    const newOrder: PlacedOrder = {
-      id: `order-${Date.now()}`,
-      orderCode,
-      placedAt: 'Agora mesmo',
-      fulfillment: details.fulfillment,
-      neighborhoodLabel: details.neighborhoodLabel,
-      buyer: details.buyer,
-      items: cartItems.map((ci) => ({
+      const orderItems = cartItems.map((ci) => ({
         menuItemId: ci.id,
         name: ci.nome,
         quantity: ci.quantidade,
         summary: formatCartItemSummary(ci),
+        firestoreSummary: formatCartItemCustomizationsOnly(ci),
         lineTotal: ci.preco * ci.quantidade,
-      })),
-      subtotal,
-      deliveryFee: details.deliveryFee,
-      tip,
-      total,
-      stage: 0,
-      estimatedReady,
-    };
+      }));
 
-    const existingOrders = orders.filter((o) => o.id !== newOrder.id);
-    setOrders([newOrder, ...existingOrders]);
-    setCartItems([]);
-    handleNavigate('orders');
+      const createInput: CreateOrderInput = {
+        orderCodePrefix: storeSettings.orderCodePrefix,
+        fulfillment: details.fulfillment,
+        estimatedMinutes,
+        subtotal,
+        deliveryFee: details.deliveryFee,
+        tip,
+        total,
+        items: orderItems,
+      };
+
+      const persisted = await createPersistedOrder(createInput);
+      const fallbackOrderCode = generateOrderCode(storeSettings.orderCodePrefix);
+      const effectiveOrderCode = persisted.ok ? persisted.orderCode : fallbackOrderCode;
+
+      const whatsappMessage = buildWhatsAppOrderMessage({
+        orderCode: persisted.ok ? persisted.orderCode : undefined,
+        buyer: details.buyer,
+        fulfillment: details.fulfillment,
+        neighborhoodLabel: details.neighborhoodLabel,
+        cartItems,
+        paymentMethod: details.paymentMethod,
+        troco: details.troco,
+        subtotal,
+        deliveryFee: details.deliveryFee,
+        tip,
+        tipPercent: details.tipPercent,
+        total,
+      });
+      const whatsappUrl = buildWhatsAppOrderUrl(storeSettings.whatsappNumber, whatsappMessage);
+      openExternalUrl(whatsappUrl);
+
+      if (persisted.ok) {
+        const newOrder: PlacedOrder = {
+          id: persisted.orderId,
+          orderCode: persisted.orderCode,
+          trackingToken: persisted.trackingToken,
+          trackerId: persisted.trackerId,
+          placedAt: formatOrderPlacedAt(persisted.placedAtIso),
+          placedAtIso: persisted.placedAtIso,
+          fulfillment: details.fulfillment,
+          neighborhoodLabel: details.neighborhoodLabel,
+          buyer: details.buyer,
+          items: orderItems,
+          subtotal,
+          deliveryFee: details.deliveryFee,
+          tip,
+          total,
+          stage: 0,
+          estimatedReady: persisted.estimatedReady,
+          persistenceStatus: 'persisted',
+          syncStatus: 'live',
+          whatsappUrl,
+        };
+        saveTrackedOrder(newOrder);
+        setOrders((prev) => [newOrder, ...prev.filter((o) => o.id !== newOrder.id)]);
+      } else {
+        const localId = `unsaved-${Date.now()}`;
+        failedOrderInputsRef.current.set(localId, createInput);
+        const nowIso = new Date().toISOString();
+        const unsavedOrder: PlacedOrder = {
+          id: localId,
+          orderCode: effectiveOrderCode,
+          placedAt: formatOrderPlacedAt(nowIso),
+          placedAtIso: nowIso,
+          fulfillment: details.fulfillment,
+          neighborhoodLabel: details.neighborhoodLabel,
+          buyer: details.buyer,
+          items: orderItems,
+          subtotal,
+          deliveryFee: details.deliveryFee,
+          tip,
+          total,
+          stage: 0,
+          estimatedReady: computeEstimatedReadyTime(estimatedMinutes),
+          persistenceStatus: persisted.reason,
+          persistenceError: persisted.message,
+          syncStatus: 'inactive',
+          whatsappUrl,
+        };
+        setOrders((prev) => [unsavedOrder, ...prev]);
+      }
+
+      setCartItems([]);
+      handleNavigate('orders');
+    } finally {
+      setIsSubmittingOrder(false);
+    }
   };
 
-  const handleAdvanceOrderStage = (orderId: string) => {
-    setOrders((prev) =>
-      prev.map((order) => {
-        if (order.id !== orderId) return order;
-        const nextStage = Math.min(3, order.stage + 1) as OrderStage;
-        return { ...order, stage: nextStage };
-      })
-    );
-  };
+  const handleRetryOrderPersistence = useCallback(async (localOrderId: string) => {
+    const createInput = failedOrderInputsRef.current.get(localOrderId);
+    if (!createInput) return;
+
+    setRetryingOrderId(localOrderId);
+    try {
+      const persisted = await createPersistedOrder(createInput);
+      if (persisted.ok) {
+        failedOrderInputsRef.current.delete(localOrderId);
+        setOrders((prev) =>
+          prev.map((order) => {
+            if (order.id !== localOrderId) return order;
+            const updated: PlacedOrder = {
+              ...order,
+              id: persisted.orderId,
+              orderCode: persisted.orderCode,
+              trackingToken: persisted.trackingToken,
+              trackerId: persisted.trackerId,
+              placedAt: formatOrderPlacedAt(persisted.placedAtIso),
+              placedAtIso: persisted.placedAtIso,
+              estimatedReady: persisted.estimatedReady,
+              stage: 0,
+              persistenceStatus: 'persisted',
+              persistenceError: undefined,
+              syncStatus: 'live',
+            };
+            saveTrackedOrder(updated);
+            return updated;
+          })
+        );
+      } else {
+        setOrders((prev) =>
+          prev.map((order) =>
+            order.id === localOrderId
+              ? {
+                  ...order,
+                  persistenceStatus: persisted.reason,
+                  persistenceError: persisted.message,
+                }
+              : order
+          )
+        );
+      }
+    } finally {
+      setRetryingOrderId(null);
+    }
+  }, []);
+
+  const handleRefreshOrderStatus = useCallback(
+    async (orderId: string) => {
+      const target = orders.find((o) => o.id === orderId);
+      if (!target || !target.trackingToken || target.persistenceStatus !== 'persisted') return;
+
+      setOrders((prev) =>
+        prev.map((o) => (o.id === orderId ? { ...o, syncStatus: 'connecting' } : o))
+      );
+
+      const snapshot = await fetchTrackedOrderSnapshot(orderId, target.trackingToken);
+      if (snapshot.status === 'found') {
+        updateTrackedOrderStageLocally(orderId, snapshot.stage);
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.id === orderId
+              ? {
+                  ...o,
+                  stage: snapshot.stage,
+                  estimatedReady: snapshot.estimatedReady || o.estimatedReady,
+                  syncStatus: 'live',
+                }
+              : o
+          )
+        );
+      } else {
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.id === orderId
+              ? {
+                  ...o,
+                  syncStatus: snapshot.status === 'unavailable' ? 'inactive' : 'error',
+                }
+              : o
+          )
+        );
+      }
+    },
+    [orders]
+  );
 
   const showStickyOrderBar = bagCount > 0 && activeScreen !== 'checkout';
+  const activePersistedOrdersCount = orders.filter(
+    (o) => o.persistenceStatus === 'persisted' && o.stage < 3
+  ).length;
 
   return (
     <div className="min-h-screen flex flex-col bg-surface text-[#1C1B1B]">
@@ -338,7 +636,7 @@ export function StorefrontApp({ canOpenAdmin = false, onOpenAdmin }: StorefrontA
         onNavigate={handleNavigate}
         bagCount={bagCount}
         bagTotal={bagSubtotal}
-        activeOrdersCount={orders.filter((o) => o.stage < 3).length}
+        activeOrdersCount={activePersistedOrdersCount}
         storeSettings={storeSettings}
       />
 
@@ -363,6 +661,7 @@ export function StorefrontApp({ canOpenAdmin = false, onOpenAdmin }: StorefrontA
             suggestedItems={suggestedPairings}
             deliveryFees={deliveryFees}
             storeSettings={storeSettings}
+            isSubmittingOrder={isSubmittingOrder}
             onBackToMenu={() => handleNavigate('menu')}
             onUpdateQuantity={handleUpdateCartItemQuantity}
             onRemoveItem={handleRemoveCartItem}
@@ -375,7 +674,11 @@ export function StorefrontApp({ canOpenAdmin = false, onOpenAdmin }: StorefrontA
         {activeScreen === 'orders' && (
           <OrdersScreen
             orders={orders}
-            onAdvanceStage={handleAdvanceOrderStage}
+            storeSettings={storeSettings}
+            isRestoringOrders={isRestoringOrders}
+            retryingOrderId={retryingOrderId}
+            onRetryPersistence={handleRetryOrderPersistence}
+            onRefreshOrderStatus={handleRefreshOrderStatus}
             onBackToMenu={() => handleNavigate('menu')}
           />
         )}
@@ -432,7 +735,6 @@ export function StorefrontApp({ canOpenAdmin = false, onOpenAdmin }: StorefrontA
         </div>
       </footer>
 
-      {/* Barra Fixa Inferior: quantidade total + subtotal em R$, oculta se vazio */}
       {showStickyOrderBar && (
         <div
           className="fixed bottom-0 left-0 right-0 z-40 bg-[#FFFFFF] border-t border-[#EAEAEA] px-4 py-2.5"
@@ -460,7 +762,6 @@ export function StorefrontApp({ canOpenAdmin = false, onOpenAdmin }: StorefrontA
         </div>
       )}
 
-      {/* Modal / Sheet de Personalização */}
       <CustomizerModal
         item={customizerItem}
         editingCartItem={editingCartItem}

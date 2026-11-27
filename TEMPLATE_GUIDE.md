@@ -28,7 +28,9 @@ Altere apenas os tokens do bloco `@theme` para aplicar a identidade visual do no
 ### 4. Metadados e Firebase
 - `index.html`: atualize `<title>`, `<meta name="description">`, `og:title` e `og:description`.
 - `metadata.json`: atualize nome e descrição do novo app.
-- Caso utilize Firebase, configure o projeto do novo cliente via variável de ambiente (`VITE_FIREBASE_API_KEY`) sem versionar chaves no repositório.
+- Configure o projeto Firebase do estabelecimento via variáveis de ambiente (`VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID`, `VITE_FIREBASE_APP_ID`, `VITE_FIREBASE_DATABASE_ID`) conforme `.env.example`, sem versionar chaves no repositório.
+- Modelo **uma loja por implantação**: cada deploy aponta para o seu próprio projeto/banco Firestore.
+- Após alterações de regras, publique `firestore.rules` no projeto Firebase correspondente (`firebase deploy --only firestore:rules`).
 
 ### 5. Painel Administrativo (`/admin`) e Deploy na Vercel
 - O projeto segue arquitetura monorepo (`server/` com Express + `src/client/` com React/Vite).
@@ -36,3 +38,23 @@ Altere apenas os tokens do bloco `@theme` para aplicar a identidade visual do no
 - **Domínio separado para o painel**: crie um segundo projeto na Vercel apontando para o mesmo repositório e defina `VITE_APP_MODE=admin` nas Environment Variables (ou configure `VITE_ADMIN_HOST`).
 - O e-mail principal administrador fica configurado em `src/shared/firebase.ts` (`BOOTSTRAP_ADMIN_EMAIL`) e em `firestore.rules`.
 
+### 6. Persistência e Acompanhamento Real de Pedidos (Zero PII)
+- **Checkout (`src/components/CheckoutScreen.tsx` + `src/shared/orderRepository.ts`)**:
+  - Ao finalizar o checkout, são gerados um `orderId` imprevisível (`UUID v4`) e um `trackingToken` aleatório de 192 bits no navegador.
+  - Em um lote atômico (`writeBatch`), o sistema grava `/orders/{orderId}` (com itens em `/orders/{orderId}/items`) e `/order_trackers/{trackerId}` (com itens em `/order_trackers/{trackerId}/items`), onde `trackerId = SHA-256(orderId + ":" + trackingToken)`.
+  - **Zero PII no Firestore**: nome, WhatsApp, endereço, bairro e observações livres do cliente (`observacao`) nunca são gravados no Firestore — permanecem apenas no `localStorage` do cliente (`src/shared/orderStorage.ts`) e na mensagem enviada ao WhatsApp.
+  - **Estados de erro e indisponibilidade**: se o Firebase não estiver configurado ou a gravação falhar, o pedido continua sendo enviado ao WhatsApp, mas a interface não exibe acompanhamento em tempo real falso e permite tentar registrar novamente.
+- **Restauração e Sincronização (`src/client/storefront/StorefrontApp.tsx` + `src/components/OrdersScreen.tsx`)**:
+  - Ao recarregar a página, o cliente restaura do `localStorage` seus dados de entrega e os IDs/tokens dos pedidos persistidos, reconectando automaticamente via `onSnapshot` em `/order_trackers/{trackerId}`.
+  - Clientes públicos não conseguem listar `/orders` nem avançar etapas da cozinha.
+- **Operação da Cozinha no Painel (`src/client/admin/views/OrdersAdminView.tsx`)**:
+  - Somente equipe autenticada e ativa (`isActiveStaff()`) acessa a aba **Pedidos** no painel `/admin`, visualiza pedidos em tempo real e avança as etapas (`Confirmado` → `Na Chapa` → `Montagem` → `Pronto`), atualizando `/orders` e `/order_trackers` atomicamente.
+
+### 7. Scripts de Desenvolvimento, Qualidade e Build
+- `npm run dev`: inicia servidor Express + Vite em `http://localhost:3000`.
+- `npm run typecheck`: valida tipagem TypeScript (`tsc --noEmit`).
+- `npm run lint`: executa ESLint no código da aplicação (`src/`, `server/`, `api/`, `tests/`, `scripts/`).
+- `npm run lint:rules`: valida sintaxe e segurança de `firestore.rules`.
+- `npm test`: executa a suíte automatizada de pedidos, restauração, zero-PII e invariantes de segurança.
+- `npm run build`: build público padrão.
+- `npm run build:admin`: build administrativo multiplataforma (via `scripts/build-admin.mjs`, compatível com Windows e POSIX).

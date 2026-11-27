@@ -37,17 +37,21 @@ export interface FirestoreErrorInfo {
   };
 }
 
+const hasImportMetaEnv = typeof import.meta !== 'undefined' && Boolean(import.meta.env);
+
 const resolvedFirebaseConfig = {
-  apiKey: (import.meta.env.VITE_FIREBASE_API_KEY || '').trim(),
-  authDomain: (import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '').trim(),
-  projectId: (import.meta.env.VITE_FIREBASE_PROJECT_ID || '').trim(),
-  storageBucket: (import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '').trim(),
-  messagingSenderId: (import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '').trim(),
-  appId: (import.meta.env.VITE_FIREBASE_APP_ID || '').trim(),
+  apiKey: (hasImportMetaEnv ? import.meta.env.VITE_FIREBASE_API_KEY || '' : '').trim(),
+  authDomain: (hasImportMetaEnv ? import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '' : '').trim(),
+  projectId: (hasImportMetaEnv ? import.meta.env.VITE_FIREBASE_PROJECT_ID || '' : '').trim(),
+  storageBucket: (hasImportMetaEnv ? import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '' : '').trim(),
+  messagingSenderId: (
+    hasImportMetaEnv ? import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '' : ''
+  ).trim(),
+  appId: (hasImportMetaEnv ? import.meta.env.VITE_FIREBASE_APP_ID || '' : '').trim(),
 };
 
 export const FIRESTORE_DATABASE_ID = (
-  import.meta.env.VITE_FIREBASE_DATABASE_ID || '(default)'
+  hasImportMetaEnv ? import.meta.env.VITE_FIREBASE_DATABASE_ID || '(default)' : '(default)'
 ).trim();
 
 export const hasFirebaseConfig = Boolean(

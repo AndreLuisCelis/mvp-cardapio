@@ -15,6 +15,12 @@ service cloud.firestore {
         id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
+    function isValidTrackerId(id) {
+      return id is string &&
+        id.size() == 64 &&
+        id.matches('^[a-f0-9]{64}$');
+    }
+
     function incoming() {
       return request.resource.data;
     }
@@ -302,6 +308,7 @@ service cloud.firestore {
     function isValidOrder(data) {
       return data.keys().hasAll([
         'orderCode',
+        'trackerId',
         'fulfillment',
         'pickupWindow',
         'subtotal',
@@ -315,6 +322,7 @@ service cloud.firestore {
       ]) &&
       data.keys().hasOnly([
         'orderCode',
+        'trackerId',
         'fulfillment',
         'pickupWindow',
         'subtotal',
@@ -326,6 +334,50 @@ service cloud.firestore {
         'createdAt',
         'updatedAt'
       ]) &&
+      data.orderCode is string && data.orderCode.size() >= 4 && data.orderCode.size() <= 20 && data.orderCode.matches('^[A-Z0-9\\-]+$') &&
+      isValidTrackerId(data.trackerId) &&
+      data.fulfillment in ['pickup', 'delivery'] &&
+      data.pickupWindow is string && data.pickupWindow.size() >= 3 && data.pickupWindow.size() <= 80 &&
+      data.subtotal is number && data.subtotal > 0 && data.subtotal <= 50000 &&
+      data.deliveryFee is number && data.deliveryFee >= 0 && data.deliveryFee <= 500 &&
+      data.tip is number && data.tip >= 0 && data.tip <= 10000 &&
+      data.total is number && data.total > 0 && data.total <= 60500 &&
+      data.stage is number && data.stage >= 0 && data.stage <= 3 &&
+      data.estimatedReady is string && data.estimatedReady.size() >= 3 && data.estimatedReady.size() <= 20 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    function isValidOrderTracker(data) {
+      return data.keys().hasAll([
+        'orderId',
+        'orderCode',
+        'fulfillment',
+        'pickupWindow',
+        'subtotal',
+        'deliveryFee',
+        'tip',
+        'total',
+        'stage',
+        'estimatedReady',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'orderId',
+        'orderCode',
+        'fulfillment',
+        'pickupWindow',
+        'subtotal',
+        'deliveryFee',
+        'tip',
+        'total',
+        'stage',
+        'estimatedReady',
+        'createdAt',
+        'updatedAt'
+      ]) &&
+      isValidId(data.orderId) &&
       data.orderCode is string && data.orderCode.size() >= 4 && data.orderCode.size() <= 20 && data.orderCode.matches('^[A-Z0-9\\-]+$') &&
       data.fulfillment in ['pickup', 'delivery'] &&
       data.pickupWindow is string && data.pickupWindow.size() >= 3 && data.pickupWindow.size() <= 80 &&
@@ -537,30 +589,64 @@ service cloud.firestore {
         existing().email != 'andreluiscelis@celisapp.com';
     }
 
-    // Orders (Zero PII; buyer name/whatsapp/address/neighborhood stay exclusively in localStorage)
+    // Orders (Zero PII; staff-only read/list/stage updates; public create with atomic tracker)
     match /orders/{orderId} {
-      allow get: if isValidId(orderId);
-      allow list: if false;
+      allow get: if isValidId(orderId) && isActiveStaff();
+      allow list: if isActiveStaff();
       allow create: if isValidId(orderId) &&
         isValidOrder(incoming()) &&
         incoming().stage == 0 &&
         incoming().createdAt == request.time &&
-        incoming().updatedAt == request.time;
+        incoming().updatedAt == request.time &&
+        existsAfter(/databases/$(database)/documents/order_trackers/$(incoming().trackerId));
       allow update: if isValidId(orderId) &&
+        isActiveStaff() &&
         isValidOrder(incoming()) &&
+        incoming().trackerId == existing().trackerId &&
         incoming().createdAt == existing().createdAt &&
         incoming().updatedAt == request.time &&
-        (isActiveStaff() || (existing().stage < 3 && incoming().stage == existing().stage + 1)) &&
         incoming().diff(existing()).affectedKeys().hasOnly(['stage', 'updatedAt']);
       allow delete: if false;
 
       match /items/{itemId} {
         allow get, list: if isValidId(orderId) &&
+          isActiveStaff() &&
           exists(/databases/$(database)/documents/orders/$(orderId));
         allow create: if isValidId(orderId) &&
           isValidId(itemId) &&
           isValidOrderItem(incoming()) &&
           existsAfter(/databases/$(database)/documents/orders/$(orderId));
+        allow update, delete: if false;
+      }
+    }
+
+    // Order Trackers (Zero PII; keyed by SHA-256(orderId:trackingToken); non-enumerable; staff-only updates)
+    match /order_trackers/{trackerId} {
+      allow get: if isValidTrackerId(trackerId);
+      allow list: if false;
+      allow create: if isValidTrackerId(trackerId) &&
+        isValidOrderTracker(incoming()) &&
+        incoming().stage == 0 &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        existsAfter(/databases/$(database)/documents/orders/$(incoming().orderId)) &&
+        getAfter(/databases/$(database)/documents/orders/$(incoming().orderId)).data.trackerId == trackerId;
+      allow update: if isValidTrackerId(trackerId) &&
+        isActiveStaff() &&
+        isValidOrderTracker(incoming()) &&
+        incoming().orderId == existing().orderId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['stage', 'updatedAt']);
+      allow delete: if false;
+
+      match /items/{itemId} {
+        allow get, list: if isValidTrackerId(trackerId) &&
+          exists(/databases/$(database)/documents/order_trackers/$(trackerId));
+        allow create: if isValidTrackerId(trackerId) &&
+          isValidId(itemId) &&
+          isValidOrderItem(incoming()) &&
+          existsAfter(/databases/$(database)/documents/order_trackers/$(trackerId));
         allow update, delete: if false;
       }
     }

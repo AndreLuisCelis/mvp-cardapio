@@ -421,7 +421,7 @@
     },
     "Order": {
       "title": "Order",
-      "description": "Comanda de pedido da cozinha sem dados pessoais (dados do comprador ficam exclusivamente no localStorage).",
+      "description": "Comanda de pedido da cozinha sem dados pessoais (dados do comprador e observações livres ficam exclusivamente no navegador/WhatsApp).",
       "type": "object",
       "properties": {
         "orderCode": {
@@ -430,6 +430,13 @@
           "maxLength": 20,
           "pattern": "^[A-Z0-9\\-]+$",
           "description": "Código legível do pedido."
+        },
+        "trackerId": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "Hash SHA-256 de orderId:trackingToken usado para sincronizar status sem expor o token."
         },
         "fulfillment": {
           "type": "string",
@@ -440,7 +447,7 @@
           "type": "string",
           "minLength": 3,
           "maxLength": 80,
-          "description": "Janela estimada de retirada ou entrega."
+          "description": "Tipo genérico de entrega ou retirada (sem bairro/endereço)."
         },
         "subtotal": {
           "type": "number",
@@ -481,6 +488,89 @@
       },
       "required": [
         "orderCode",
+        "trackerId",
+        "fulfillment",
+        "pickupWindow",
+        "subtotal",
+        "deliveryFee",
+        "tip",
+        "total",
+        "stage",
+        "estimatedReady",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "OrderTracker": {
+      "title": "OrderTracker",
+      "description": "Visão pública de acompanhamento de pedido indexada por hash SHA-256(orderId:trackingToken), sem PII.",
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$",
+          "description": "ID da comanda correspondente em /orders."
+        },
+        "orderCode": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 20,
+          "pattern": "^[A-Z0-9\\-]+$",
+          "description": "Código legível do pedido."
+        },
+        "fulfillment": {
+          "type": "string",
+          "enum": ["pickup", "delivery"],
+          "description": "Modalidade de recebimento."
+        },
+        "pickupWindow": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 80,
+          "description": "Modalidade genérica sem endereço ou bairro."
+        },
+        "subtotal": {
+          "type": "number",
+          "description": "Subtotal dos itens em BRL."
+        },
+        "deliveryFee": {
+          "type": "number",
+          "description": "Taxa de entrega em BRL."
+        },
+        "tip": {
+          "type": "number",
+          "description": "Gorjeta em BRL."
+        },
+        "total": {
+          "type": "number",
+          "description": "Total final do pedido em BRL."
+        },
+        "stage": {
+          "type": "number",
+          "description": "Etapa atual da cozinha (atualizada apenas por equipe autorizada)."
+        },
+        "estimatedReady": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 20,
+          "description": "Horário previsto de conclusão."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Data de criação no servidor."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Data da última atualização no servidor."
+        }
+      },
+      "required": [
+        "orderId",
+        "orderCode",
         "fulfillment",
         "pickupWindow",
         "subtotal",
@@ -495,7 +585,7 @@
     },
     "OrderItem": {
       "title": "OrderItem",
-      "description": "Item individual de um pedido armazenado em subcoleção.",
+      "description": "Item individual de um pedido armazenado em subcoleção (somente personalizações estruturadas, sem observações livres).",
       "type": "object",
       "properties": {
         "menuItemId": {
@@ -518,7 +608,7 @@
         "summary": {
           "type": "string",
           "maxLength": 400,
-          "description": "Resumo de personalizações e observações."
+          "description": "Resumo apenas de personalizações selecionadas (sem texto livre/PII)."
         },
         "lineTotal": {
           "type": "number",
@@ -551,11 +641,19 @@
     },
     "/orders/{orderId}": {
       "schema": { "$ref": "#/entities/Order" },
-      "description": "Comandas de pedido sem PII."
+      "description": "Comandas de pedido sem PII acessíveis apenas pela equipe autorizada."
     },
     "/orders/{orderId}/items/{itemId}": {
       "schema": { "$ref": "#/entities/OrderItem" },
       "description": "Itens detalhados pertencentes a cada comanda."
+    },
+    "/order_trackers/{trackerId}": {
+      "schema": { "$ref": "#/entities/OrderTracker" },
+      "description": "Rastreador em tempo real protegido por hash de token aleatório, sem listagem."
+    },
+    "/order_trackers/{trackerId}/items/{itemId}": {
+      "schema": { "$ref": "#/entities/OrderItem" },
+      "description": "Itens sem PII associados ao rastreador do cliente."
     }
   }
 }

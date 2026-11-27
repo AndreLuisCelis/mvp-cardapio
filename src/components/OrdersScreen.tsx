@@ -1,11 +1,28 @@
-import { Check, ChefHat, Clock, Flame, PackageCheck, RotateCcw } from 'lucide-react';
-import { KITCHEN_STAGES, STORE_INFO } from '../config/store';
-import { OrderStage, PlacedOrder } from '../types';
+import {
+  AlertTriangle,
+  Check,
+  ChefHat,
+  Clock,
+  Flame,
+  Loader2,
+  MessageCircle,
+  PackageCheck,
+  RefreshCw,
+  RotateCcw,
+  Wifi,
+  WifiOff,
+} from 'lucide-react';
+import { KITCHEN_STAGES } from '../config/store';
+import { OrderStage, PlacedOrder, StoreSettingsRecord } from '../types';
 import { formatBRL } from '../utils/format';
 
 interface OrdersScreenProps {
   orders: PlacedOrder[];
-  onAdvanceStage: (orderId: string) => void;
+  storeSettings: StoreSettingsRecord;
+  isRestoringOrders?: boolean;
+  retryingOrderId?: string | null;
+  onRetryPersistence?: (orderId: string) => void;
+  onRefreshOrderStatus?: (orderId: string) => void;
   onBackToMenu: () => void;
 }
 
@@ -18,11 +35,31 @@ const STAGE_ICONS: Record<OrderStage, typeof Check> = {
 
 export function OrdersScreen({
   orders,
-  onAdvanceStage,
+  storeSettings,
+  isRestoringOrders = false,
+  retryingOrderId = null,
+  onRetryPersistence,
+  onRefreshOrderStatus,
   onBackToMenu,
 }: OrdersScreenProps) {
   const activeOrder = orders[0];
   const pastOrders = orders.slice(1);
+
+  if (isRestoringOrders && !activeOrder) {
+    return (
+      <div className="max-w-xl mx-auto py-12">
+        <div className="bg-[#FFFFFF] border border-[#EAEAEA] rounded-xl p-8 space-y-4 text-center">
+          <Loader2 className="w-7 h-7 animate-spin text-brand mx-auto" />
+          <h1 className="text-[20px] font-bold text-[#1C1B1B]">
+            Restaurando acompanhamento dos seus pedidos...
+          </h1>
+          <p className="text-[14px] text-[#5A413A]">
+            Consultando o status atualizado na cozinha em tempo real.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!activeOrder) {
     return (
@@ -46,18 +83,47 @@ export function OrdersScreen({
     );
   }
 
-  const isCompleted = activeOrder.stage >= 3;
+  const isPersisted = activeOrder.persistenceStatus === 'persisted';
+  const isCompleted = isPersisted && activeOrder.stage >= 3;
   const buyerAddress =
     activeOrder.fulfillment === 'delivery' && activeOrder.buyer.endereco
       ? `${activeOrder.buyer.endereco} · ${activeOrder.neighborhoodLabel}`
-      : `${STORE_INFO.name} · ${STORE_INFO.neighborhood} · ${STORE_INFO.city} · ${activeOrder.neighborhoodLabel}`;
+      : `${storeSettings.name} · ${storeSettings.neighborhood} · ${storeSettings.city} · ${activeOrder.neighborhoodLabel}`;
+
+  const headerStatusText = (() => {
+    if (activeOrder.persistenceStatus === 'unavailable') {
+      return {
+        label: 'Enviado ao WhatsApp (sem rastreio online)',
+        colorClass: 'text-[#845300]',
+      };
+    }
+    if (activeOrder.persistenceStatus === 'failed') {
+      return {
+        label: 'Falha ao salvar acompanhamento no servidor',
+        colorClass: 'text-[#BA1A1A]',
+      };
+    }
+    if (isCompleted) {
+      return {
+        label:
+          activeOrder.fulfillment === 'pickup'
+            ? 'Pronto para retirada no balcão'
+            : 'Pedido pronto e saindo para entrega',
+        colorClass: 'text-[#16A34A]',
+      };
+    }
+    return {
+      label: 'Acompanhamento em tempo real ativo',
+      colorClass: 'text-[#16A34A]',
+    };
+  })();
 
   return (
     <div className="space-y-8 pb-16">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-[13px] font-semibold text-[#16A34A]">
-            {isCompleted ? 'Pronto para retirada' : 'Pedido em preparo na cozinha'} ·{' '}
+          <p className={`text-[13px] font-semibold ${headerStatusText.colorClass}`}>
+            {headerStatusText.label} ·{' '}
             <span className="text-[#5A413A] font-normal">{activeOrder.placedAt}</span>
           </p>
           <h1 className="text-[26px] sm:text-[30px] font-extrabold tracking-[-0.02em] text-[#1C1B1B] tabular-nums">
@@ -65,17 +131,30 @@ export function OrdersScreen({
           </h1>
         </div>
 
-        <button
-          type="button"
-          onClick={onBackToMenu}
-          className="min-h-[44px] px-4 py-2 rounded-lg bg-[#FFFFFF] border border-[#EAEAEA] hover:border-[#D9D9D9] text-[14px] font-semibold text-[#1C1B1B] cursor-pointer transition-colors"
-        >
-          Voltar ao Cardápio
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5">
+          {activeOrder.whatsappUrl && (
+            <a
+              href={activeOrder.whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="min-h-[44px] px-4 py-2 rounded-lg bg-[#16A34A] hover:bg-[#15803D] text-white text-[14px] font-semibold inline-flex items-center gap-2 transition-colors"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>Abrir no WhatsApp</span>
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={onBackToMenu}
+            className="min-h-[44px] px-4 py-2 rounded-lg bg-[#FFFFFF] border border-[#EAEAEA] hover:border-[#D9D9D9] text-[14px] font-semibold text-[#1C1B1B] cursor-pointer transition-colors"
+          >
+            Voltar ao Cardápio
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Live Kitchen Tracker */}
+        {/* Left: Real-Time Tracker OR Explicit Unavailable / Persistence Failure State */}
         <section className="lg:col-span-7 bg-[#FFFFFF] border border-[#EAEAEA] rounded-xl p-5 sm:p-6 space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[#EAEAEA]">
             <div className="flex items-center gap-2.5">
@@ -92,62 +171,156 @@ export function OrdersScreen({
               </div>
             </div>
 
-            {!isCompleted && (
-              <button
-                type="button"
-                onClick={() => onAdvanceStage(activeOrder.id)}
-                className="min-h-[40px] px-3.5 py-2 rounded-full bg-[#F5F5F5] hover:bg-[#EAE7E7] border border-[#EAEAEA] text-[12px] font-semibold text-[#1C1B1B] cursor-pointer transition-colors"
-              >
-                Avançar Etapa da Cozinha
-              </button>
+            {isPersisted && (
+              <div className="flex items-center gap-2 text-[12px] font-semibold">
+                {activeOrder.syncStatus === 'live' && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F0FDF4] border border-[#BBF7D0] text-[#15803D]">
+                    <Wifi className="w-3.5 h-3.5" />
+                    <span>Sincronizado em tempo real</span>
+                  </span>
+                )}
+                {activeOrder.syncStatus === 'connecting' && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[#475569]">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Conectando à cozinha...</span>
+                  </span>
+                )}
+                {(activeOrder.syncStatus === 'error' || activeOrder.syncStatus === 'inactive') && (
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#FFFBEB] border border-[#FDE68A] text-[#92400E]">
+                      <WifiOff className="w-3.5 h-3.5" />
+                      <span>Sincronização indisponível</span>
+                    </span>
+                    {onRefreshOrderStatus && (
+                      <button
+                        type="button"
+                        onClick={() => onRefreshOrderStatus(activeOrder.id)}
+                        className="min-h-[34px] px-3 py-1 rounded-lg border border-[#EAEAEA] hover:bg-[#F5F5F5] text-[12px] font-semibold text-[#1C1B1B] inline-flex items-center gap-1 cursor-pointer"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>Atualizar</span>
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
-          <ol className="space-y-4">
-            {KITCHEN_STAGES.map((step) => {
-              const Icon = STAGE_ICONS[step.stage];
-              const isDone = activeOrder.stage > step.stage;
-              const isCurrent = activeOrder.stage === step.stage;
+          {activeOrder.persistenceStatus === 'unavailable' && (
+            <div
+              role="status"
+              className="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] p-5 space-y-3"
+            >
+              <div className="flex items-start gap-3">
+                <WifiOff className="w-5 h-5 text-[#B45309] shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <h2 className="text-[15px] font-bold text-[#78350F]">
+                    Acompanhamento em tempo real indisponível
+                  </h2>
+                  <p className="text-[13px] text-[#92400E] leading-[1.5]">
+                    O serviço de banco de dados em tempo real (Firebase) não está disponível neste ambiente. Este pedido não foi salvo no servidor; acompanhe a confirmação e o preparo diretamente pelo WhatsApp da loja.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
-              return (
-                <li
-                  key={step.stage}
-                  className={`flex items-start gap-3.5 p-3.5 rounded-xl border transition-colors ${
-                    isCurrent
-                      ? 'border-brand bg-surface'
-                      : isDone
-                      ? 'border-[#EAEAEA] bg-[#FFFFFF]'
-                      : 'border-[#EAEAEA] bg-[#FFFFFF] opacity-55'
-                  }`}
-                >
-                  <div
-                    className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
-                      isCurrent
-                        ? 'bg-brand text-[#FFFFFF]'
-                        : isDone
-                        ? 'bg-[#16A34A] text-[#FFFFFF]'
-                        : 'bg-[#F0EDED] text-[#8E7069]'
-                    }`}
+          {activeOrder.persistenceStatus === 'failed' && (
+            <div
+              role="alert"
+              className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-5 space-y-3"
+            >
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-5 h-5 text-[#DC2626] shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <h2 className="text-[15px] font-bold text-[#991B1B]">
+                    Pedido não salvo para acompanhamento em tempo real
+                  </h2>
+                  <p className="text-[13px] text-[#B91C1C] leading-[1.5]">
+                    {activeOrder.persistenceError ||
+                      'Não foi possível gravar o pedido no servidor. O acompanhamento automático da cozinha não está ativo.'}
+                  </p>
+                </div>
+              </div>
+              {onRetryPersistence && (
+                <div>
+                  <button
+                    type="button"
+                    disabled={retryingOrderId === activeOrder.id}
+                    onClick={() => onRetryPersistence(activeOrder.id)}
+                    className="min-h-[40px] px-4 py-2 rounded-lg bg-[#991B1B] hover:bg-[#7F1D1D] disabled:opacity-60 text-white text-[13px] font-semibold inline-flex items-center gap-2 cursor-pointer"
                   >
-                    <Icon className="w-4 h-4" strokeWidth={2.2} />
-                  </div>
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <p className="text-[15px] font-bold text-[#1C1B1B]">
-                        {step.title}
-                      </p>
-                      {isCurrent && (
-                        <span className="text-[12px] font-semibold text-brand">
-                          Em andamento
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[13px] text-[#5A413A]">{step.subtitle}</p>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
+                    {retryingOrderId === activeOrder.id ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Tentando registrar...</span>
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-4 h-4" />
+                        <span>Tentar registrar acompanhamento novamente</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {isPersisted && (
+            <>
+              <ol className="space-y-4">
+                {KITCHEN_STAGES.map((step) => {
+                  const Icon = STAGE_ICONS[step.stage];
+                  const isDone = activeOrder.stage > step.stage;
+                  const isCurrent = activeOrder.stage === step.stage;
+
+                  return (
+                    <li
+                      key={step.stage}
+                      className={`flex items-start gap-3.5 p-3.5 rounded-xl border transition-colors ${
+                        isCurrent
+                          ? 'border-brand bg-surface'
+                          : isDone
+                          ? 'border-[#EAEAEA] bg-[#FFFFFF]'
+                          : 'border-[#EAEAEA] bg-[#FFFFFF] opacity-55'
+                      }`}
+                    >
+                      <div
+                        className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
+                          isCurrent
+                            ? 'bg-brand text-[#FFFFFF]'
+                            : isDone
+                            ? 'bg-[#16A34A] text-[#FFFFFF]'
+                            : 'bg-[#F0EDED] text-[#8E7069]'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" strokeWidth={2.2} />
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <p className="text-[15px] font-bold text-[#1C1B1B]">
+                            {step.title}
+                          </p>
+                          {isCurrent && (
+                            <span className="text-[12px] font-semibold text-brand">
+                              Em andamento
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[13px] text-[#5A413A]">{step.subtitle}</p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+
+              <p className="text-[12px] text-[#8E7069]">
+                As etapas avançam automaticamente conforme a equipe da cozinha atualiza seu pedido no painel interno.
+              </p>
+            </>
+          )}
 
           <div className="pt-2 border-t border-[#EAEAEA] text-[13px] text-[#5A413A] space-y-1">
             {(activeOrder.buyer.nome || activeOrder.buyer.whatsapp) && (
@@ -215,30 +388,38 @@ export function OrdersScreen({
         <section className="space-y-3 pt-2">
           <h2 className="text-[18px] font-bold text-[#1C1B1B]">Pedidos Anteriores</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {pastOrders.map((order) => (
-              <div
-                key={order.id}
-                className="bg-[#FFFFFF] border border-[#EAEAEA] rounded-xl p-4 flex items-center justify-between gap-4"
-              >
-                <div className="space-y-1 min-w-0">
-                  <p className="text-[14px] font-bold text-[#1C1B1B] tabular-nums">
-                    Pedido #{order.orderCode} · {formatBRL(order.total)}
-                  </p>
-                  <p className="text-[13px] text-[#5A413A] truncate">
-                    {order.items.map((i) => `${i.quantity}× ${i.name}`).join(', ')}
-                  </p>
-                  <p className="text-[12px] text-[#8E7069]">{order.placedAt}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={onBackToMenu}
-                  className="min-h-[40px] px-3.5 py-2 rounded-full bg-[#F5F5F5] hover:bg-[#EAE7E7] border border-[#EAEAEA] text-[12px] font-semibold text-[#1C1B1B] inline-flex items-center gap-1.5 shrink-0 cursor-pointer"
+            {pastOrders.map((order) => {
+              const stageInfo =
+                order.persistenceStatus === 'persisted'
+                  ? KITCHEN_STAGES.find((s) => s.stage === order.stage)?.title || 'Em andamento'
+                  : 'Sem rastreio online';
+              return (
+                <div
+                  key={order.id}
+                  className="bg-[#FFFFFF] border border-[#EAEAEA] rounded-xl p-4 flex items-center justify-between gap-4"
                 >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Pedir de Novo</span>
-                </button>
-              </div>
-            ))}
+                  <div className="space-y-1 min-w-0">
+                    <p className="text-[14px] font-bold text-[#1C1B1B] tabular-nums">
+                      Pedido #{order.orderCode} · {formatBRL(order.total)}
+                    </p>
+                    <p className="text-[13px] text-[#5A413A] truncate">
+                      {order.items.map((i) => `${i.quantity}× ${i.name}`).join(', ')}
+                    </p>
+                    <p className="text-[12px] text-[#8E7069]">
+                      {order.placedAt} · {stageInfo}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={onBackToMenu}
+                    className="min-h-[40px] px-3.5 py-2 rounded-full bg-[#F5F5F5] hover:bg-[#EAE7E7] border border-[#EAEAEA] text-[12px] font-semibold text-[#1C1B1B] inline-flex items-center gap-1.5 shrink-0 cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Pedir de Novo</span>
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}

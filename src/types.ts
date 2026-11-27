@@ -147,13 +147,20 @@ export interface PlacedOrderItem {
   name: string;
   quantity: number;
   summary: string;
+  firestoreSummary?: string;
   lineTotal: number;
 }
+
+export type OrderPersistenceStatus = 'persisted' | 'unavailable' | 'failed';
+export type OrderSyncStatus = 'live' | 'connecting' | 'error' | 'inactive';
 
 export interface PlacedOrder {
   id: string;
   orderCode: string;
+  trackingToken?: string;
+  trackerId?: string;
   placedAt: string;
+  placedAtIso?: string;
   fulfillment: FulfillmentType;
   neighborhoodLabel: string;
   buyer: BuyerData;
@@ -164,4 +171,26 @@ export interface PlacedOrder {
   total: number;
   stage: OrderStage;
   estimatedReady: string;
+  persistenceStatus: OrderPersistenceStatus;
+  persistenceError?: string;
+  syncStatus?: OrderSyncStatus;
+  whatsappUrl?: string;
 }
+
+export interface StaffOrderRecord {
+  id: string;
+  orderCode: string;
+  trackerId: string;
+  fulfillment: FulfillmentType;
+  pickupWindow: string;
+  subtotal: number;
+  deliveryFee: number;
+  tip: number;
+  total: number;
+  stage: OrderStage;
+  estimatedReady: string;
+  createdAtIso: string;
+  updatedAtIso: string;
+  items?: PlacedOrderItem[];
+}
+
